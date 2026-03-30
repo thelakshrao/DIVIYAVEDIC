@@ -74,10 +74,8 @@ export default function ItemsAtFront() {
       : 0;
 
   return (
-    <div className="font-['DM_Sans',sans-serif]">
-      {/* ══ SECTION 1 — FEATURED ══ */}
+    <div id="productlisted" className="font-['DM_Sans',sans-serif]">
       <section className="bg-[#fdf8f0] py-16 px-6 relative overflow-hidden">
-        {/* Header */}
         <div className="max-w-5xl mx-auto text-center mb-10">
           <p className="text-[10px] tracking-[0.25em] uppercase text-amber-700/45 font-semibold mb-2">
             Top Picks
@@ -101,7 +99,6 @@ export default function ItemsAtFront() {
           </div>
         ) : (
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-10 items-start">
-            {/* LEFT — orbit tiles */}
             <div className="w-full md:w-80 shrink-0">
               <div className="grid grid-cols-2 gap-3.5">
                 {orbitItems.map((p, i) => {
@@ -153,14 +150,12 @@ export default function ItemsAtFront() {
                 })}
               </div>
 
-              {/* Progress bar */}
               <div className="h-0.5 bg-amber-700/10 rounded mt-4 overflow-hidden">
                 <div
                   className="h-full bg-linear-to-r from-amber-400 to-amber-600 rounded transition-[width_0.08s_linear]"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              {/* Dots */}
               <div className="flex justify-center gap-1.5 mt-2.5">
                 {orbitItems.map((_, i) => (
                   <div
@@ -179,13 +174,11 @@ export default function ItemsAtFront() {
               </div>
             </div>
 
-            {/* RIGHT — featured detail card */}
             {active && (
               <div
                 key={featKey}
                 className="flex-1 bg-white border border-amber-700/12 rounded-3xl shadow-[0_4px_36px_rgba(120,53,15,0.1)] relative overflow-hidden p-7"
               >
-                {/* Gold top bar */}
                 <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-transparent via-amber-400 to-transparent rounded-t-3xl" />
 
                 <p className="text-[9px] tracking-widest uppercase text-amber-700/40 font-semibold mb-3">
@@ -271,9 +264,8 @@ export default function ItemsAtFront() {
         )}
       </section>
 
-      {/* ══ SECTION 2 — PRODUCT GRID ══ */}
       {products.length > 0 && (
-        <section className="bg-white py-16 px-6">
+        <section id="all-products" className="bg-white py-16 px-6">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10">
               <p className="text-[10px] tracking-[0.25em] uppercase text-amber-700/45 font-semibold mb-2">
@@ -300,7 +292,6 @@ export default function ItemsAtFront() {
                     onClick={() => navigate(`/buy/${p.id}`)}
                     className="bg-white border border-amber-700/10 rounded-2xl overflow-hidden cursor-pointer relative hover:-translate-y-1.5 hover:shadow-[0_12px_36px_rgba(120,53,15,0.13)] hover:border-amber-700/22 transition-all"
                   >
-                    {/* Gold top line */}
                     <div className="absolute top-0 left-0 right-0 h-0.5 bg-linaer-to-r from-transparent via-amber-400 to-transparent" />
 
                     {d > 0 && (

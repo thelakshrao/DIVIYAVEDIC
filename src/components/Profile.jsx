@@ -2,9 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { OmLogo } from "./Navbar";
 import { db } from "./Firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-
-const ADMIN_EMAIL = "diviyavedic@gmail.com";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+} from "firebase/firestore";
 
 const MandalaRing = ({ size = 120, opacity = 0.06 }) => (
   <svg
@@ -97,6 +103,15 @@ const carouselProducts = [
   },
 ];
 
+const statusColor = {
+  Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  Confirmed: "bg-blue-100 text-blue-700 border-blue-200",
+  Processing: "bg-purple-100 text-purple-700 border-purple-200",
+  Shipped: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  Delivered: "bg-green-100 text-green-700 border-green-200",
+  Cancelled: "bg-red-100 text-red-600 border-red-200",
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -107,7 +122,10 @@ export default function Profile() {
     email: "",
     contact: "",
     address: "",
+    role: "customer",
   });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [featuredIdx, setFeaturedIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [featuredKey, setFeaturedKey] = useState(0);
@@ -151,7 +169,7 @@ export default function Profile() {
       try {
         const saved = localStorage.getItem("user");
         if (!saved) {
-          navigate("/login");
+          navigate("/");
           return;
         }
         const parsed = JSON.parse(saved);
@@ -166,6 +184,14 @@ export default function Profile() {
             address: d.address || "",
             role: d.role || "customer",
           });
+        } else {
+          setUserInfo({
+            name: parsed.name || "",
+            email,
+            contact: parsed.phone || "",
+            address: "",
+            role: "customer",
+          });
         }
       } catch (err) {
         console.error(err);
@@ -176,12 +202,38 @@ export default function Profile() {
     loadUser();
   }, [navigate]);
 
+  useEffect(() => {
+    if (!userInfo.email) return;
+    const loadOrders = async () => {
+      setOrdersLoading(true);
+      try {
+        const snap = await getDocs(
+          query(collection(db, "orders"), orderBy("createdAt", "desc")),
+        );
+        const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const mine = all
+          .filter(
+            (o) =>
+              (o.customerEmail || "").toLowerCase() === userInfo.email ||
+              (o.email || "").toLowerCase() === userInfo.email ||
+              (o.address?.email || "").toLowerCase() === userInfo.email,
+          )
+          .slice(0, 4);
+        setRecentOrders(mine);
+      } catch (e) {
+        console.error(e);
+      }
+      setOrdersLoading(false);
+    };
+    loadOrders();
+  }, [userInfo.email]);
+
   const handleEdit = async () => {
     if (isEditing) {
       setSaving(true);
       const updated = {
         name: userInfo.name,
-        email: userInfo.email.toLowerCase(),
+        email: userInfo.email,
         phone: userInfo.contact,
         address: userInfo.address,
         role: userInfo.role,
@@ -216,14 +268,13 @@ export default function Profile() {
       .slice(0, 2);
   };
 
-  /* ── Loading ── */
   if (loading)
     return (
       <div className="min-h-screen bg-[#fdf8f0] flex flex-col items-center justify-center gap-5">
-        <div className="animate-float">
+        <div style={{ animation: "float 4s ease-in-out infinite" }}>
           <OmLogo size={70} />
         </div>
-        <p className="font-cormorant italic text-[17px] text-amber-700/55">
+        <p className="font-['Cormorant_Garamond',serif] italic text-[17px] text-amber-700/55">
           Loading your sacred profile…
         </p>
       </div>
@@ -238,8 +289,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="profile-page min-h-screen bg-[#fdf8f0] font-dm relative overflow-x-hidden">
-      {/* bg pattern */}
+    <div className="min-h-screen bg-[#fdf8f0] font-['DM_Sans',sans-serif] relative overflow-x-hidden">
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -248,80 +298,101 @@ export default function Profile() {
         }}
       />
 
-      <div className="relative z-10 max-w-270 mx-auto px-6 pt-11 pb-20">
-        {/* ── HERO CARD ── */}
-        <div className="light-card gold-top-bar-3 p-8 mb-5 animate-fade-up animate-delay-1">
-          <div className="absolute -top-7.5 -right-7.5 z-0">
-            <div className="animate-spin-slow-30">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 pt-6 sm:pt-11 pb-20">
+        <div className="bg-white border border-amber-700/10 rounded-2xl shadow-sm relative overflow-hidden p-4 sm:p-8 mb-4 sm:mb-5">
+          <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+          <div className="absolute -top-7 -right-7 pointer-events-none">
+            <div style={{ animation: "spin 30s linear infinite" }}>
               <MandalaRing size={150} opacity={0.07} />
             </div>
           </div>
-          <div className="absolute top-2.5 right-2.5 z-0">
-            <div className="animate-spin-reverse">
+          <div className="absolute top-2 right-2 pointer-events-none">
+            <div style={{ animation: "spin 24s linear reverse infinite" }}>
               <MandalaRing size={80} opacity={0.05} />
             </div>
           </div>
 
-          <div className="hero-inner flex items-center justify-between flex-wrap gap-5 relative z-10">
-            {/* Avatar + name */}
-            <div className="flex items-center gap-5">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-5">
               <div className="relative shrink-0">
                 <div
-                  className="animate-pulse-ring w-18 h-18 rounded-full flex items-center justify-center text-amber-800 font-cinzel text-[22px] font-bold border-3 border-amber-400/30 shadow-[0_4px_20px_rgba(180,83,9,0.2)]"
+                  className="w-14 h-14 sm:w-18 sm:h-18 rounded-full flex items-center justify-center text-amber-800 font-['Cinzel',serif] text-[18px] sm:text-[22px] font-bold border-[3px] border-amber-400/30 shadow-[0_4px_20px_rgba(180,83,9,0.2)]"
                   style={{
                     background:
                       "linear-gradient(135deg,#fcd34d,#f59e0b,#d97706)",
+                    animation: "pulse-ring 2.5s ease-out infinite",
                   }}
                 >
                   {getInitials(userInfo.name)}
                 </div>
-                <div className="absolute bottom-0.5 right-0.5 w-3,25 h-3.25 rounded-full bg-green-500 border-2 border-white" />
+                <div className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500 border-2 border-white" />
               </div>
               <div>
-                <div className="flex gap-2 flex-wrap mb-1.5">
-                  <span className="gold-badge">✦ Vedic Member</span>
-                  {isAdmin && <span className="admin-badge">⚡ Admin</span>}
+                <div className="flex gap-1.5 flex-wrap mb-1">
+                  <span className="inline-flex items-center gap-1 bg-linear-to-br from-amber-400/12 to-amber-600/7 border border-amber-700/20 text-amber-700 rounded-full px-2 sm:px-3 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase">
+                    ✦ Vedic Member
+                  </span>
+                  {isAdmin && (
+                    <span className="inline-flex items-center gap-1 bg-linear-to-br from-indigo-400/12 to-indigo-600/7 border border-indigo-400/25 text-indigo-600 rounded-full px-2 sm:px-3 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase">
+                      ⚡ Admin
+                    </span>
+                  )}
                 </div>
-                <h1 className="font-cinzel font-bold text-[24px] text-[#44260a] m-0 mb-0.5 tracking-[0.03em]">
+                <h1 className="font-['Cinzel',serif] font-bold text-[16px] sm:text-[24px] text-[#44260a] m-0 mb-0.5 tracking-[0.03em]">
                   {userInfo.name || "My Account"}
                 </h1>
-                <p className="font-cormorant italic text-[15px] text-[#b08050] m-0">
+                <p className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[15px] text-[#b08050] m-0 truncate max-w-50 sm:max-w-none">
                   {userInfo.email}
                 </p>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="stats-row flex gap-10">
+            <div className="flex gap-5 sm:gap-10 justify-center sm:justify-start">
               {[
-                { label: "Orders", value: "0" },
+                {
+                  label: "Orders",
+                  value: recentOrders.length > 0 ? recentOrders.length : "0",
+                  onClick: () => navigate("/orders"),
+                },
                 { label: "Wishlist", value: "2" },
-                { label: "Karma Pts", value: "108" },
-              ].map(({ label, value }) => (
-                <div key={label} className="text-center">
-                  <div className="text-gold-gradient font-cinzel text-[24px] font-bold leading-none">
+                { label: "Karma", value: "108" },
+              ].map(({ label, value, onClick }) => (
+                <div
+                  key={label}
+                  className={`text-center ${onClick ? "cursor-pointer group" : ""}`}
+                  onClick={onClick}
+                >
+                  <div
+                    className="font-['Cinzel',serif] text-[18px] sm:text-[24px] font-bold leading-none"
+                    style={{
+                      background: "linear-gradient(135deg,#b45309,#f59e0b)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
                     {value}
                   </div>
-                  <div className="text-[10px] text-amber-700/45 tracking-[0.12em] uppercase mt-0.5 font-medium">
+                  <div
+                    className={`text-[9px] sm:text-[10px] text-amber-700/45 tracking-[0.12em] uppercase mt-0.5 font-medium ${onClick ? "group-hover:text-amber-700 transition-colors" : ""}`}
+                  >
                     {label}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {isAdmin && (
                 <button
                   onClick={() => navigate("/admin")}
-                  className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white border-none px-5 py-2.5 rounded-[10px] font-cinzel text-[10.5px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)] transition-all shadow-[0_4px_16px_rgba(99,102,241,0.3)] flex items-center gap-2"
+                  className="bg-linear-to-br from-indigo-500 to-indigo-600 text-white border-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-[10px] font-['Cinzel',serif] text-[9px] sm:text-[10.5px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)] transition-all shadow-[0_4px_16px_rgba(99,102,241,0.3)] flex items-center gap-1.5"
                 >
-                  ⚡ Admin Dashboard
+                  ⚡ Admin
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="bg-transparent text-red-700/65 border border-red-800/18 px-4 py-1.5 rounded-lg font-dm text-xs font-medium cursor-pointer hover:bg-red-800/5 hover:border-red-700/35 hover:text-red-700 transition-all"
+                className="bg-transparent text-red-700/65 border border-red-800/18 px-3 sm:px-4 py-1.5 rounded-lg font-['DM_Sans',sans-serif] text-[11px] sm:text-xs font-medium cursor-pointer hover:bg-red-800/5 hover:border-red-700/35 hover:text-red-700 transition-all"
               >
                 Logout
               </button>
@@ -329,22 +400,20 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ── TWO COL ── */}
-        <div className="two-col-grid grid grid-cols-2 gap-5 mb-5">
-          {/* Personal info */}
-          <div className="light-card gold-top-bar-3 p-7 animate-fade-up animate-delay-2">
-            <div className="absolute bottom-4 right-4 opacity-4">
-              {/* swastika placeholder */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-4 sm:mb-5">
+          <div className="bg-white border border-amber-700/10 rounded-2xl shadow-sm relative overflow-hidden p-4 sm:p-7">
+            <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+            <div className="text-[9px] sm:text-[10px] tracking-[0.22em] text-amber-700/45 uppercase font-semibold mb-3">
+              Personal Info
             </div>
-            <div className="eyebrow-line mb-4">Personal Info</div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-cinzel text-[16px] font-semibold text-[#44260a] m-0">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h2 className="font-['Cinzel',serif] text-[13px] sm:text-[16px] font-semibold text-[#44260a] m-0">
                 Your Details
               </h2>
               <button
                 onClick={handleEdit}
                 disabled={saving}
-                className={`bg-transparent text-amber-700 border border-amber-700/25 px-4 py-1.5 rounded-lg font-dm text-xs font-medium cursor-pointer hover:bg-amber-700/6 hover:border-amber-700/40 transition-all ${saving ? "opacity-50" : ""}`}
+                className={`bg-transparent text-amber-700 border border-amber-700/25 px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-['DM_Sans',sans-serif] text-[11px] sm:text-xs font-medium cursor-pointer hover:bg-amber-700/6 hover:border-amber-700/40 transition-all ${saving ? "opacity-50" : ""}`}
               >
                 {saving ? "Saving…" : isEditing ? "✓ Save" : "Edit"}
               </button>
@@ -352,15 +421,15 @@ export default function Profile() {
             {fields.map(({ label, key, type }) => (
               <div
                 key={key}
-                className="flex items-center justify-between py-3 border-b border-amber-700/6 last:border-0"
+                className="flex items-start sm:items-center justify-between py-2 sm:py-3 border-b border-amber-700/6 last:border-0 gap-2"
               >
-                <span className="text-[11px] text-amber-700/50 tracking-widest uppercase font-semibold w-17 shrink-0">
+                <span className="text-[10px] sm:text-[11px] text-amber-700/50 tracking-widest uppercase font-semibold w-14 sm:w-17 shrink-0">
                   {label}
                 </span>
                 {isEditing && type !== "static" ? (
                   type === "textarea" ? (
                     <textarea
-                      className="form-input-light field-textarea resize-y h-15"
+                      className="flex-1 box-border bg-[rgba(245,158,11,0.05)] border border-amber-700/20 rounded-xl px-2.5 py-2 text-[12px] sm:text-[13.5px] text-amber-900 outline-none focus:border-amber-400 resize-y min-h-15 transition-all"
                       value={userInfo[key]}
                       onChange={(e) =>
                         setUserInfo({ ...userInfo, [key]: e.target.value })
@@ -368,7 +437,7 @@ export default function Profile() {
                     />
                   ) : (
                     <input
-                      className="form-input-light"
+                      className="flex-1 box-border bg-[rgba(245,158,11,0.05)] border border-amber-700/20 rounded-xl px-2.5 py-2 text-[12px] sm:text-[13.5px] text-amber-900 outline-none focus:border-amber-400 transition-all"
                       value={userInfo[key]}
                       onChange={(e) =>
                         setUserInfo({ ...userInfo, [key]: e.target.value })
@@ -377,7 +446,7 @@ export default function Profile() {
                   )
                 ) : (
                   <span
-                    className={`text-[13.5px] text-right flex-1 ${userInfo[key] ? "text-[#44260a]" : "text-amber-700/25"}`}
+                    className={`text-[12px] sm:text-[13.5px] text-right flex-1 truncate ${userInfo[key] ? "text-[#44260a]" : "text-amber-700/25"}`}
                   >
                     {userInfo[key] || "Not set"}
                   </span>
@@ -386,72 +455,174 @@ export default function Profile() {
             ))}
           </div>
 
-          {/* Orders */}
-          <div className="light-card gold-top-bar-3 p-7 flex flex-col animate-fade-up animate-delay-3">
-            <div className="absolute top-4 right-4 opacity-5">
-              <MandalaRing size={80} opacity={1} />
-            </div>
-            <div className="eyebrow-line mb-4">Order History</div>
-            <h2 className="font-cinzel text-[16px] font-semibold text-[#44260a] mb-4">
-              Your Orders
-            </h2>
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
-              <div className="w-16 h-16 rounded-full bg-amber-400/8 border border-dashed border-amber-700/20 flex items-center justify-center text-[28px]">
-                🛒
+          <div className="bg-white border border-amber-700/10 rounded-2xl shadow-sm relative overflow-hidden p-4 sm:p-7 flex flex-col">
+            <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <div>
+                <div className="text-[9px] sm:text-[10px] tracking-[0.22em] text-amber-700/45 uppercase font-semibold mb-1">
+                  Order History
+                </div>
+                <h2 className="font-['Cinzel',serif] text-[13px] sm:text-[16px] font-semibold text-[#44260a] m-0">
+                  Your Orders
+                </h2>
               </div>
-              <p className="font-cormorant italic text-amber-700/45 text-[16px] text-center leading-normal m-0">
-                Your sacred shopping
-                <br />
-                journey begins here.
-              </p>
-              <button
-                onClick={() => navigate("/")}
-                className="mt-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none px-6 py-2.5 rounded-[10px] font-cinzel text-[10.5px] font-semibold tracking-[0.12em] uppercase cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all shadow-[0_4px_16px_rgba(245,158,11,0.3)]"
-              >
-                Explore Products
-              </button>
+              {recentOrders.length > 0 && (
+                <button
+                  onClick={() => navigate("/orders")}
+                  className="text-[10px] sm:text-[11px] font-semibold text-amber-700 border border-amber-700/20 bg-transparent px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg cursor-pointer hover:bg-amber-50 transition-all font-['DM_Sans',sans-serif]"
+                >
+                  See All →
+                </button>
+              )}
             </div>
+
+            {ordersLoading ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-400/8 border border-dashed border-amber-700/20 flex items-center justify-center text-[22px] sm:text-[28px]">
+                  🛒
+                </div>
+                <p className="font-['Cormorant_Garamond',serif] italic text-amber-700/45 text-[14px] sm:text-[16px] text-center leading-normal m-0">
+                  Your sacred shopping
+                  <br />
+                  journey begins here.
+                </p>
+                <button
+                  onClick={() => navigate("/")}
+                  className="mt-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-[10px] font-['Cinzel',serif] text-[9px] sm:text-[10.5px] font-semibold tracking-[0.12em] uppercase cursor-pointer hover:opacity-90 hover:-translate-y-px transition-all shadow-[0_4px_16px_rgba(245,158,11,0.3)]"
+                >
+                  Explore Products
+                </button>
+              </div>
+            ) : (
+              <div
+                className="flex-1 overflow-x-auto flex gap-2 sm:gap-3 pb-2"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "rgba(180,83,9,0.2) transparent",
+                }}
+              >
+                {recentOrders.map((o, i) => {
+                  const sc =
+                    statusColor[o.status] ||
+                    "bg-gray-100 text-gray-600 border-gray-200";
+                  const img = o.productImage || o.items?.[0]?.image || "";
+                  const name =
+                    o.productName || o.items?.[0]?.productName || "Order";
+                  const date =
+                    o.createdAt
+                      ?.toDate?.()
+                      ?.toLocaleDateString?.("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      }) || "";
+                  return (
+                    <div
+                      key={o.id}
+                      onClick={() => navigate("/orders")}
+                      className="shrink-0 w-32 sm:w-42 bg-[#fdf8f0] border border-amber-700/10 rounded-xl p-2 sm:p-3 cursor-pointer hover:border-amber-700/22 hover:shadow-[0_4px_16px_rgba(120,53,15,0.1)] transition-all"
+                      style={{
+                        animation: `slideInRight 0.4s ease ${i * 0.08}s both`,
+                      }}
+                    >
+                      <div className="w-full h-16 sm:h-20 rounded-lg overflow-hidden bg-amber-50 flex items-center justify-center mb-2 border border-amber-700/8">
+                        {img ? (
+                          <img
+                            src={img}
+                            alt={name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xl sm:text-2xl">🛍️</span>
+                        )}
+                      </div>
+                      <p className="font-['Cinzel',serif] text-[10px] sm:text-[11px] font-semibold text-[#44260a] truncate mb-1">
+                        {name}
+                      </p>
+                      <p className="font-['Cinzel',serif] text-[11px] sm:text-[12px] font-bold text-amber-700 mb-1.5">
+                        ₹{o.total || o.grandTotal || 0}
+                      </p>
+                      <div className="flex items-center justify-between gap-1">
+                        <span
+                          className={`inline-flex px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-semibold border ${sc}`}
+                        >
+                          {o.status}
+                        </span>
+                        {date && (
+                          <span className="text-[9px] sm:text-[10px] text-amber-700/40">
+                            {date}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div
+                  onClick={() => navigate("/orders")}
+                  className="shrink-0 w-20 sm:w-25 bg-linear-to-br from-amber-50 to-amber-100/60 border border-amber-700/15 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-amber-400/40 hover:shadow-[0_4px_16px_rgba(245,158,11,0.15)] transition-all p-2 sm:p-3"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-400/15 flex items-center justify-center text-amber-700 text-base sm:text-lg">
+                    →
+                  </div>
+                  <p className="font-['Cinzel',serif] text-[9px] sm:text-[10px] font-semibold text-amber-700 text-center leading-tight">
+                    View All
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ── CURATED ── */}
-        <div className="light-card gold-top-bar-3 p-7 animate-fade-up animate-delay-4">
-          <div className="absolute -top-5 -left-5 opacity-4">
-            <div className="animate-spin-slow-30">
+        <div className="bg-white border border-amber-700/10 rounded-2xl shadow-sm relative overflow-hidden p-4 sm:p-7">
+          <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+          <div className="absolute -top-5 -left-5 pointer-events-none opacity-[0.04]">
+            <div style={{ animation: "spin 30s linear infinite" }}>
               <MandalaRing size={100} opacity={1} />
             </div>
           </div>
-          <div className="eyebrow-line mb-4">Curated For You</div>
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="font-cinzel text-[17px] font-semibold text-[#44260a] m-0">
-              Inspired by Your Journey
-            </h2>
-            <span className="font-cormorant italic text-[13px] text-amber-700/40">
+
+          <div className="flex justify-between items-center mb-4 sm:mb-5">
+            <div>
+              <div className="text-[9px] sm:text-[10px] tracking-[0.22em] text-amber-700/45 uppercase font-semibold mb-1">
+                Curated For You
+              </div>
+              <h2 className="font-['Cinzel',serif] text-[14px] sm:text-[17px] font-semibold text-[#44260a] m-0">
+                Inspired by Your Journey
+              </h2>
+            </div>
+            <span className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[13px] text-amber-700/40">
               Vedic selections
             </span>
           </div>
 
-          <div className="curated-layout flex gap-4 items-stretch">
-            {/* Featured card */}
-            <div className="shrink-0 w-65">
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+            <div className="sm:shrink-0 sm:w-65 w-full">
               <div
                 key={featuredKey}
-                className="relative rounded-2xl overflow-hidden cursor-pointer animate-featured-in w-full h-70 border"
+                className="relative rounded-2xl overflow-hidden cursor-pointer w-full border"
                 style={{
                   background: featured.color,
                   borderColor: featured.accent + "22",
+                  animation: "featuredIn 0.5s ease",
+                  height: "220px",
                 }}
               >
-                <span className="absolute top-3 left-3 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 font-cinzel text-[8px] font-bold tracking-[0.15em] uppercase px-2.5 py-0.5 rounded-xl">
+                <span className="absolute top-3 left-3 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 font-['Cinzel',serif] text-[8px] font-bold tracking-[0.15em] uppercase px-2.5 py-0.5 rounded-xl">
                   ✦ Featured
                 </span>
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3.5 px-5 py-7">
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-4 py-5">
                   <div className="relative flex items-center justify-center">
-                    <div className="absolute animate-spin-slow-30 opacity-15">
-                      <MandalaRing size={110} opacity={1} />
+                    <div
+                      className="absolute opacity-15"
+                      style={{ animation: "spin 30s linear infinite" }}
+                    >
+                      <MandalaRing size={90} opacity={1} />
                     </div>
                     <div
-                      className="text-[56px] relative z-10"
+                      className="text-[44px] sm:text-[56px] relative z-10"
                       style={{
                         filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.12))",
                       }}
@@ -460,18 +631,18 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="text-center">
-                    <p className="font-cinzel text-[15px] font-semibold text-[#44260a] mb-1">
+                    <p className="font-['Cinzel',serif] text-[13px] sm:text-[15px] font-semibold text-[#44260a] mb-0.5">
                       {featured.name}
                     </p>
-                    <p className="font-cormorant italic text-[13px] text-amber-700/60 mb-2">
+                    <p className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[13px] text-amber-700/60 mb-1">
                       {featured.sub}
                     </p>
-                    <p className="text-xs text-amber-900 leading-normal opacity-75 px-2.5">
+                    <p className="text-[11px] sm:text-xs text-amber-900 leading-normal opacity-75 px-2">
                       {featured.desc}
                     </p>
                   </div>
                   <div
-                    className="text-white text-[10px] font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full font-dm"
+                    className="text-white text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full font-['DM_Sans',sans-serif]"
                     style={{
                       background: featured.accent,
                       boxShadow: `0 4px 12px ${featured.accent}44`,
@@ -481,62 +652,82 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-
-              {/* Progress bar */}
-              <div className="h-0.5 bg-amber-700/10 rounded overflow-hidden mt-3">
+              <div className="h-0.5 bg-amber-700/10 rounded overflow-hidden mt-2 sm:mt-3">
                 <div
-                  className="h-full bg-linear-to-r from-amber-400 to-amber-600 rounded transition-[width_0.1s_linear]"
-                  style={{ width: `${progress}%` }}
+                  className="h-full bg-linear-to-r from-amber-400 to-amber-600 rounded"
+                  style={{
+                    width: `${progress}%`,
+                    transition: "width 0.1s linear",
+                  }}
                 />
               </div>
-
-              {/* Dots */}
-              <div className="flex justify-center gap-1.5 mt-2.5">
+              <div className="flex justify-center gap-1.5 mt-2">
                 {carouselProducts.map((_, i) => (
                   <div
                     key={i}
-                    className={`carousel-dot ${i === featuredIdx ? "active" : ""}`}
                     onClick={() => goTo(i)}
+                    className="cursor-pointer rounded-sm transition-all"
+                    style={{
+                      width: i === featuredIdx ? 18 : 7,
+                      height: 7,
+                      borderRadius: i === featuredIdx ? 3 : "50%",
+                      background:
+                        i === featuredIdx ? "#f59e0b" : "rgba(180,83,9,0.2)",
+                      transition: "all 0.3s",
+                    }}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Tile grid */}
-            <div className="flex-1 grid grid-cols-2 gap-3 content-start">
+            <div className="flex-1 grid grid-cols-3 sm:grid-cols-2 gap-2 sm:gap-3 content-start">
               {carouselProducts.map((p, i) => {
                 const active = i === featuredIdx;
                 return (
                   <div
                     key={p.name}
-                    className={`small-tile ${active ? "active-tile" : ""}`}
-                    style={{ background: active ? p.color : "#fdf8f0" }}
                     onClick={() => goTo(i)}
+                    className="rounded-xl cursor-pointer flex flex-col items-center justify-center gap-1.5 py-3 px-1 sm:py-4 sm:px-2 border-[1.5px] transition-all"
+                    style={{
+                      background: active ? p.color : "#fdf8f0",
+                      borderColor: active ? p.accent : "rgba(180,83,9,0.1)",
+                      boxShadow: active
+                        ? `0 0 0 2px rgba(245,158,11,0.18)`
+                        : "none",
+                    }}
                   >
                     <div className="relative flex items-center justify-center">
                       <div
-                        className={`absolute animate-spin-slow-30 ${active ? "opacity-20" : "opacity-8"}`}
+                        className="absolute"
+                        style={{
+                          opacity: active ? 0.2 : 0.08,
+                          animation: "spin 30s linear infinite",
+                        }}
                       >
-                        <MandalaRing size={50} opacity={1} />
+                        <MandalaRing size={40} opacity={1} />
                       </div>
-                      <div className="text-[26px] relative z-10">{p.icon}</div>
+                      <div className="text-[20px] sm:text-[26px] relative z-10">
+                        {p.icon}
+                      </div>
                     </div>
                     <div className="text-center">
                       <p
-                        className={`font-cinzel text-[11px] font-semibold leading-[1.3] ${active ? "text-[#44260a]" : "text-amber-900"}`}
+                        className={`font-['Cinzel',serif] text-[9px] sm:text-[11px] font-semibold leading-[1.3] ${active ? "text-[#44260a]" : "text-amber-900"}`}
                       >
                         {p.name}
                       </p>
                       <p
-                        className={`font-cormorant italic text-[11px] mt-0.5 ${active ? "" : "text-amber-700/45"}`}
-                        style={{ color: active ? p.accent : undefined }}
+                        className="font-['Cormorant_Garamond',serif] italic text-[9px] sm:text-[11px] mt-0.5"
+                        style={{
+                          color: active ? p.accent : "rgba(180,83,9,0.45)",
+                        }}
                       >
                         {p.sub}
                       </p>
                     </div>
                     {active && (
                       <div
-                        className="w-6 h-0.5 rounded mt-0.5"
+                        className="w-5 h-0.5 rounded"
                         style={{
                           background: `linear-gradient(90deg,${p.accent},#fcd34d)`,
                         }}
@@ -549,16 +740,26 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-13 text-center">
-          <div className="inline-block animate-float">
+        <div className="mt-10 sm:mt-13 text-center">
+          <div
+            className="inline-block"
+            style={{ animation: "float 4s ease-in-out infinite" }}
+          >
             <OmLogo size={44} />
           </div>
-          <p className="font-cormorant italic text-amber-700/35 mt-2.5 text-[13px] tracking-[0.18em]">
+          <p className="font-['Cormorant_Garamond',serif] italic text-amber-700/35 mt-2.5 text-[13px] tracking-[0.18em]">
             Pure • Energised • Lab Certified
           </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from{transform:rotate(0deg)}to{transform:rotate(360deg)} }
+        @keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
+        @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(180,83,9,0.3)}70%{box-shadow:0 0 0 12px rgba(180,83,9,0)}100%{box-shadow:0 0 0 0 rgba(180,83,9,0)} }
+        @keyframes featuredIn { from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes slideInRight { from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)} }
+      `}</style>
     </div>
   );
 }

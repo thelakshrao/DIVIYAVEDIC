@@ -4,7 +4,6 @@ import { OmLogo } from "./Navbar";
 
 const ORBIT_DOTS = [0, 45, 90, 135, 180, 225, 270, 315];
 
-/* ── Keyframes ── */
 const Keyframes = () => (
   <style>{`
     @keyframes ftSpin  { to { transform: rotate(360deg); } }
@@ -18,7 +17,6 @@ const Keyframes = () => (
   `}</style>
 );
 
-/* ── Decorative OM background ── */
 const OmBg = () => (
   <div className="absolute right-0 bottom-0 w-64 h-64 pointer-events-none select-none opacity-[0.15]">
     <div
@@ -73,7 +71,6 @@ const OmBg = () => (
   </div>
 );
 
-/* ── Social icons ── */
 const InstagramIcon = () => (
   <svg
     width="16"
@@ -147,7 +144,7 @@ const footerLinks = {
     { label: "Sacred Gemstones", href: "/gemstones" },
     { label: "Vedic Bracelets", href: "#" },
     { label: "Puja Samagri", href: "/puja" },
-    { label: "Yantras & Pyramids", href: "#" },
+    { label: "Yantras", href: "#" },
   ],
   Support: [
     { label: "Book Consultation", href: "#" },

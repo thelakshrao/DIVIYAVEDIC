@@ -10,7 +10,6 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-// ── DVS Order ID generator ─────────────────────────────────────────────────
 const generateOrderId = async () => {
   try {
     const snap = await getDocs(collection(db, "orders"));
@@ -21,7 +20,6 @@ const generateOrderId = async () => {
   }
 };
 
-// ── OM Seal ────────────────────────────────────────────────────────────────
 const ORBIT_DOTS = [0, 60, 120, 180, 240, 300];
 const OmSeal = () => (
   <div
@@ -97,7 +95,6 @@ const OmSeal = () => (
   </div>
 );
 
-// ── Constants ──────────────────────────────────────────────────────────────
 const STATES = [
   "Andhra Pradesh",
   "Arunachal Pradesh",
@@ -135,9 +132,9 @@ const STATES = [
 ];
 
 const inputCls =
-  "w-full px-4 py-3 rounded-xl text-sm outline-none transition-all bg-white border border-amber-700/20 text-amber-900 placeholder:text-amber-700/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10";
+  "w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm outline-none transition-all bg-white border border-amber-700/20 text-amber-900 placeholder:text-amber-700/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10";
 const selectCls =
-  "w-full px-4 py-3 rounded-xl text-sm outline-none transition-all bg-white border border-amber-700/20 text-amber-900 appearance-none cursor-pointer focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10";
+  "w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm outline-none transition-all bg-white border border-amber-700/20 text-amber-900 appearance-none cursor-pointer focus:border-amber-400 focus:ring-2 focus:ring-amber-400/10";
 const labelCls =
   "text-[10px] uppercase tracking-widest text-amber-700/50 font-semibold mb-1 block";
 
@@ -152,7 +149,6 @@ const EMPTY_ADDR = {
   pincode: "",
 };
 
-// ── Step dots ──────────────────────────────────────────────────────────────
 const StepDots = ({ step }) => (
   <div className="ml-auto flex items-center gap-1.5">
     {[1, 2, 3].map((s) => (
@@ -180,7 +176,6 @@ const StepDots = ({ step }) => (
   </div>
 );
 
-// ── Gold button ────────────────────────────────────────────────────────────
 const GoldBtn = ({ children, disabled, onClick, className = "" }) => (
   <button
     disabled={disabled}
@@ -199,7 +194,6 @@ const GoldBtn = ({ children, disabled, onClick, className = "" }) => (
   </button>
 );
 
-// ══════════════════════════════════════════════════════════════════════════
 function OrderModal({ product, qty, onClose }) {
   const [step, setStep] = useState(1);
   const [payMode, setPayMode] = useState(null);
@@ -208,7 +202,6 @@ function OrderModal({ product, qty, onClose }) {
   const [orderId, setOrderId] = useState(null);
   const overlayRef = useRef();
 
-  // Pre-fill from localStorage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("user") || "{}");
     if (saved.name || saved.phone || saved.email) {
@@ -240,9 +233,7 @@ function OrderModal({ product, qty, onClose }) {
     setPlacing(true);
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      // ── Generate DVS order ID ──────────────────────────────────────────
       const newOrderId = await generateOrderId();
-
       const orderData = {
         orderId: newOrderId,
         productId: product.id,
@@ -273,10 +264,7 @@ function OrderModal({ product, qty, onClose }) {
         email: user.email || addr.email,
         createdAt: serverTimestamp(),
       };
-
-      // ✅ Use setDoc with orderId as the Firestore document ID
       await setDoc(doc(db, "orders", newOrderId), orderData);
-
       setOrderId(newOrderId);
       setStep(4);
     } catch (e) {
@@ -290,13 +278,13 @@ function OrderModal({ product, qty, onClose }) {
     <div
       ref={overlayRef}
       onClick={(e) => e.target === overlayRef.current && onClose()}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
       style={{ background: "rgba(10,7,4,0.72)", backdropFilter: "blur(6px)" }}
     >
       <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}} @keyframes checkPop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}} .check-pop{animation:checkPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both}`}</style>
 
       <div
-        className="bg-[#fffbf2] rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.35)] w-full max-w-lg max-h-[92vh] overflow-y-auto relative"
+        className="bg-[#fffbf2] rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.35)] w-full max-w-lg max-h-[94vh] overflow-y-auto relative"
         style={{
           animation: "modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards",
         }}
@@ -317,27 +305,25 @@ function OrderModal({ product, qty, onClose }) {
           </button>
         )}
 
-        <div className="p-7 pb-3">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
+        <div className="p-5 sm:p-7 pb-3">
+          <div className="flex items-center gap-3 mb-5 sm:mb-6">
             <OmSeal />
             <div>
-              <p className="font-['Cinzel',serif] text-[17px] font-semibold text-[#44260a] tracking-wide">
+              <p className="font-['Cinzel',serif] text-[15px] sm:text-[17px] font-semibold text-[#44260a] tracking-wide">
                 Diviya Vedic Shop
               </p>
-              <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-[#b08050] tracking-wide">
+              <p className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-[#b08050] tracking-wide">
                 Secure Sacred Order
               </p>
             </div>
             {step < 4 && <StepDots step={step} />}
           </div>
 
-          {/* Product strip */}
           <div
-            className="flex items-center gap-3 p-3 rounded-2xl mb-6 border border-amber-700/10"
+            className="flex items-center gap-3 p-3 rounded-2xl mb-5 sm:mb-6 border border-amber-700/10"
             style={{ background: "rgba(251,191,36,0.04)" }}
           >
-            <div className="w-14 h-14 rounded-xl overflow-hidden border border-amber-700/12 shrink-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-amber-700/12 shrink-0">
               {product.images?.[0] ? (
                 <img
                   src={product.images[0]}
@@ -351,33 +337,32 @@ function OrderModal({ product, qty, onClose }) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-['Cinzel',serif] text-[13px] font-semibold text-[#44260a] truncate">
+              <p className="font-['Cinzel',serif] text-[12px] sm:text-[13px] font-semibold text-[#44260a] truncate">
                 {product.name}
               </p>
-              <p className="font-['Cormorant_Garamond',serif] italic text-[12px] text-[#b08050]">
+              <p className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[12px] text-[#b08050]">
                 {product.brand || product.category}
               </p>
-              <p className="font-['Cinzel',serif] text-[11px] text-amber-700/50 mt-0.5">
+              <p className="font-['Cinzel',serif] text-[10px] sm:text-[11px] text-amber-700/50 mt-0.5">
                 Qty: {qty}
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="font-['Cinzel',serif] text-[16px] font-bold text-[#b45309]">
+              <p className="font-['Cinzel',serif] text-[14px] sm:text-[16px] font-bold text-[#b45309]">
                 ₹{grandTotal}
               </p>
               {deliveryFee > 0 ? (
-                <p className="font-['Cormorant_Garamond',serif] italic text-[11px] text-amber-700/40">
+                <p className="font-['Cormorant_Garamond',serif] italic text-[10px] sm:text-[11px] text-amber-700/40">
                   incl. ₹{deliveryFee} delivery
                 </p>
               ) : (
-                <p className="font-['Cormorant_Garamond',serif] italic text-[11px] text-green-600">
+                <p className="font-['Cormorant_Garamond',serif] italic text-[10px] sm:text-[11px] text-green-600">
                   Free delivery
                 </p>
               )}
             </div>
           </div>
 
-          {/* ── STEP 1: Payment ── */}
           {step === 1 && (
             <div>
               <p className="font-['Cinzel',serif] text-[11px] tracking-widest text-amber-700/45 uppercase mb-4">
@@ -405,7 +390,7 @@ function OrderModal({ product, qty, onClose }) {
                   <div
                     key={opt.id}
                     onClick={() => setPayMode(opt.id)}
-                    className="flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all"
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all"
                     style={{
                       borderColor:
                         payMode === opt.id ? "#f59e0b" : "rgba(180,83,9,0.12)",
@@ -418,7 +403,7 @@ function OrderModal({ product, qty, onClose }) {
                     }}
                   >
                     <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                      className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-xl sm:text-2xl shrink-0"
                       style={{
                         background:
                           payMode === opt.id
@@ -429,10 +414,10 @@ function OrderModal({ product, qty, onClose }) {
                       {opt.icon}
                     </div>
                     <div className="flex-1">
-                      <p className="font-['Cinzel',serif] text-[13px] font-semibold text-[#44260a]">
+                      <p className="font-['Cinzel',serif] text-[12px] sm:text-[13px] font-semibold text-[#44260a]">
                         {opt.title}
                       </p>
-                      <p className="font-['Cormorant_Garamond',serif] italic text-[12px] text-[#b08050]">
+                      <p className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[12px] text-[#b08050]">
                         {opt.sub}
                       </p>
                     </div>
@@ -470,7 +455,7 @@ function OrderModal({ product, qty, onClose }) {
                   style={{ background: "rgba(251,191,36,0.04)" }}
                 >
                   <span className="text-base mt-0.5">ℹ️</span>
-                  <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-[#b08050] leading-relaxed">
+                  <p className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-[#b08050] leading-relaxed">
                     You will be redirected to our secure payment gateway after
                     filling your address.
                   </p>
@@ -482,14 +467,13 @@ function OrderModal({ product, qty, onClose }) {
             </div>
           )}
 
-          {/* ── STEP 2: Address ── */}
           {step === 2 && (
             <div>
               <p className="font-['Cinzel',serif] text-[11px] tracking-widest text-amber-700/45 uppercase mb-4">
                 Delivery Address
               </p>
-              <div className="flex flex-col gap-4 mb-6">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-3 sm:gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className={labelCls}>Full Name *</label>
                     <input
@@ -537,7 +521,7 @@ function OrderModal({ product, qty, onClose }) {
                     onChange={(e) => set("line2", e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div>
                     <label className={labelCls}>City *</label>
                     <input
@@ -574,7 +558,7 @@ function OrderModal({ product, qty, onClose }) {
               <div className="flex gap-2.5">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-5 py-3.5 rounded-xl border border-amber-700/20 text-amber-700/60 bg-transparent hover:bg-amber-400/6 hover:text-amber-700 transition-all text-xs cursor-pointer font-['Cinzel',serif]"
+                  className="px-4 sm:px-5 py-3.5 rounded-xl border border-amber-700/20 text-amber-700/60 bg-transparent hover:bg-amber-400/6 hover:text-amber-700 transition-all text-xs cursor-pointer font-['Cinzel',serif]"
                 >
                   ← Back
                 </button>
@@ -587,13 +571,11 @@ function OrderModal({ product, qty, onClose }) {
             </div>
           )}
 
-          {/* ── STEP 3: Review ── */}
           {step === 3 && (
             <div>
               <p className="font-['Cinzel',serif] text-[11px] tracking-widest text-amber-700/45 uppercase mb-4">
                 Review & Confirm
               </p>
-
               <div className="rounded-2xl border border-amber-700/10 overflow-hidden mb-4">
                 <div
                   className="px-4 py-2.5 border-b border-amber-700/8"
@@ -604,17 +586,16 @@ function OrderModal({ product, qty, onClose }) {
                   </p>
                 </div>
                 <div className="px-4 py-3">
-                  <p className="font-['Cinzel',serif] text-[13px] font-semibold text-[#44260a] mb-1">
+                  <p className="font-['Cinzel',serif] text-[12px] sm:text-[13px] font-semibold text-[#44260a] mb-1">
                     {addr.name} · {addr.phone}
                   </p>
-                  <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-[#b08050] leading-relaxed">
+                  <p className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-[#b08050] leading-relaxed">
                     {addr.line1}
                     {addr.line2 ? `, ${addr.line2}` : ""}, {addr.city},{" "}
                     {addr.state} — {addr.pincode}
                   </p>
                 </div>
               </div>
-
               <div className="rounded-2xl border border-amber-700/10 overflow-hidden mb-5">
                 <div
                   className="px-4 py-2.5 border-b border-amber-700/8"
@@ -636,10 +617,10 @@ function OrderModal({ product, qty, onClose }) {
                     key={k}
                     className="flex items-center justify-between px-4 py-2.5 border-b border-amber-700/5 last:border-0"
                   >
-                    <span className="font-['Cormorant_Garamond',serif] italic text-[13px] text-[#b08050]">
+                    <span className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-[#b08050]">
                       {k}
                     </span>
-                    <span className="font-['Cinzel',serif] text-[13px] text-[#44260a]">
+                    <span className="font-['Cinzel',serif] text-[12px] sm:text-[13px] text-[#44260a]">
                       {v}
                     </span>
                   </div>
@@ -651,27 +632,25 @@ function OrderModal({ product, qty, onClose }) {
                   <span className="font-['Cinzel',serif] text-[12px] tracking-wide text-[#44260a] font-semibold">
                     Grand Total
                   </span>
-                  <span className="font-['Cinzel',serif] text-[18px] font-bold text-[#b45309]">
+                  <span className="font-['Cinzel',serif] text-[16px] sm:text-[18px] font-bold text-[#b45309]">
                     ₹{grandTotal}
                   </span>
                 </div>
               </div>
-
               <div
                 className="flex items-center gap-2.5 p-3 rounded-xl mb-5 border border-amber-400/18"
                 style={{ background: "rgba(251,191,36,0.04)" }}
               >
                 <span className="text-base">🔒</span>
-                <p className="font-['Cormorant_Garamond',serif] italic text-[12px] text-[#b08050] leading-snug">
+                <p className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[12px] text-[#b08050] leading-snug">
                   Your order is protected. Each item is energised, packed with
                   care and shipped with love.
                 </p>
               </div>
-
               <div className="flex gap-2.5">
                 <button
                   onClick={() => setStep(2)}
-                  className="px-5 py-3.5 rounded-xl border border-amber-700/20 text-amber-700/60 bg-transparent hover:bg-amber-400/6 hover:text-amber-700 transition-all text-xs cursor-pointer font-['Cinzel',serif]"
+                  className="px-4 sm:px-5 py-3.5 rounded-xl border border-amber-700/20 text-amber-700/60 bg-transparent hover:bg-amber-400/6 hover:text-amber-700 transition-all text-xs cursor-pointer font-['Cinzel',serif]"
                 >
                   ← Back
                 </button>
@@ -691,7 +670,6 @@ function OrderModal({ product, qty, onClose }) {
             </div>
           )}
 
-          {/* ── STEP 4: Success ── */}
           {step === 4 && (
             <div className="text-center py-4">
               <div
@@ -714,13 +692,12 @@ function OrderModal({ product, qty, onClose }) {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <p className="font-['Cinzel',serif] text-[18px] font-semibold text-[#44260a] mb-1.5">
+              <p className="font-['Cinzel',serif] text-[16px] sm:text-[18px] font-semibold text-[#44260a] mb-1.5">
                 Order Confirmed!
               </p>
-              <p className="font-['Cormorant_Garamond',serif] italic text-[15px] text-[#b08050] mb-4">
+              <p className="font-['Cormorant_Garamond',serif] italic text-[14px] sm:text-[15px] text-[#b08050] mb-4">
                 May this sacred item bring blessings to your life 🙏
               </p>
-
               <div
                 className="inline-block px-5 py-2 rounded-full mb-6 border border-amber-400/25"
                 style={{ background: "rgba(251,191,36,0.07)" }}
@@ -728,11 +705,10 @@ function OrderModal({ product, qty, onClose }) {
                 <p className="font-['Cinzel',serif] text-[9px] tracking-widest text-amber-700/45 uppercase mb-1">
                   Order ID
                 </p>
-                <p className="font-['Cinzel',serif] text-[16px] font-bold text-[#b45309] tracking-widest">
+                <p className="font-['Cinzel',serif] text-[15px] sm:text-[16px] font-bold text-[#b45309] tracking-widest">
                   {orderId}
                 </p>
               </div>
-
               <div
                 className="rounded-2xl border border-amber-700/10 p-4 text-left mb-6"
                 style={{ background: "rgba(251,191,36,0.03)" }}
@@ -753,14 +729,13 @@ function OrderModal({ product, qty, onClose }) {
                     <span className="font-['Cinzel',serif] text-[9px] tracking-widest text-amber-700/40 uppercase">
                       {k}
                     </span>
-                    <span className="font-['Cormorant_Garamond',serif] italic text-[13px] text-[#44260a]">
+                    <span className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-[#44260a]">
                       {v}
                     </span>
                   </div>
                 ))}
               </div>
-
-              <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-amber-700/45 leading-relaxed mb-5">
+              <p className="font-['Cormorant_Garamond',serif] italic text-[12px] sm:text-[13px] text-amber-700/45 leading-relaxed mb-5">
                 A confirmation will be sent to{" "}
                 <span className="text-[#b45309]">{addr.email}</span>.<br />
                 {payMode === "cod" &&
@@ -771,9 +746,9 @@ function OrderModal({ product, qty, onClose }) {
           )}
         </div>
 
-        <div className="px-7 py-4 border-t border-amber-700/8 flex items-center justify-center gap-3">
+        <div className="px-5 sm:px-7 py-4 border-t border-amber-700/8 flex items-center justify-center gap-3">
           <span className="font-serif text-sm text-amber-300/40">ॐ</span>
-          <span className="font-['Cormorant_Garamond',serif] italic text-[12px] text-amber-700/35 tracking-wide">
+          <span className="font-['Cormorant_Garamond',serif] italic text-[11px] sm:text-[12px] text-amber-700/35 tracking-wide">
             Pure · Energised · Lab Certified · Secure
           </span>
           <span className="font-serif text-sm text-amber-300/40">ॐ</span>
@@ -783,7 +758,6 @@ function OrderModal({ product, qty, onClose }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
 export default function Buy() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -826,8 +800,8 @@ export default function Buy() {
   if (loading)
     return (
       <div className="min-h-screen bg-[#fdf8f0]">
-        <div className="max-w-6xl mx-auto px-6 pt-10 pb-20">
-          <div className="grid grid-cols-2 gap-12 items-start">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 items-start">
             <div className="w-full aspect-square rounded-2xl bg-amber-100 animate-pulse" />
             <div className="flex flex-col gap-4">
               {[40, 80, 60, 100, 80, 60].map((w, i) => (
@@ -846,7 +820,7 @@ export default function Buy() {
   if (!product)
     return (
       <div className="min-h-screen bg-[#fdf8f0]">
-        <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-20 text-center">
           <div className="text-6xl mb-4 opacity-30">🛍️</div>
           <p className="font-['Cinzel',serif] text-lg text-amber-700/50">
             Product not found
@@ -888,9 +862,8 @@ export default function Buy() {
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-6 pt-10 pb-20">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-amber-700/50 mb-8 flex-wrap">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-20">
+        <div className="flex items-center gap-2 text-xs text-amber-700/50 mb-5 sm:mb-8 flex-wrap">
           <span
             onClick={() => navigate("/")}
             className="cursor-pointer hover:text-amber-700 transition-colors"
@@ -905,16 +878,16 @@ export default function Buy() {
             {product.category}
           </span>
           <span className="text-amber-700/25">/</span>
-          <span className="text-amber-700 font-medium">{product.name}</span>
+          <span className="text-amber-700 font-medium truncate max-w-35 sm:max-w-none">
+            {product.name}
+          </span>
         </div>
 
-        {/* Main 2-col */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start mb-20">
-          {/* Images */}
-          <div className="sticky top-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 items-start mb-12 sm:mb-20">
+          <div>
             <div className="rounded-2xl overflow-hidden border border-amber-700/10 bg-white shadow-[0_4px_32px_rgba(120,53,15,0.1)] aspect-square flex items-center justify-center relative mb-3">
               {discount > 0 && (
-                <div className="absolute top-3.5 left-3.5 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 font-['Cinzel',serif] text-[9px] font-bold tracking-widest uppercase px-3 py-1 rounded-xl shadow-[0_2px_8px_rgba(245,158,11,0.3)]">
+                <div className="absolute top-3 left-3 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 font-['Cinzel',serif] text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-xl shadow-[0_2px_8px_rgba(245,158,11,0.3)]">
                   {discount}% OFF
                 </div>
               )}
@@ -934,7 +907,7 @@ export default function Buy() {
                   <div
                     key={i}
                     onClick={() => setActiveImg(i)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${i === activeImg ? "border-amber-400 shadow-[0_0_0_2px_rgba(245,158,11,0.2)]" : "border-transparent hover:border-amber-400/50"}`}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${i === activeImg ? "border-amber-400 shadow-[0_0_0_2px_rgba(245,158,11,0.2)]" : "border-transparent hover:border-amber-400/50"}`}
                   >
                     <img
                       src={src}
@@ -952,24 +925,24 @@ export default function Buy() {
             <div className="inline-flex items-center gap-1.5 bg-amber-400/10 border border-amber-700/18 text-amber-700 rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-widest uppercase mb-3">
               {product.category}
             </div>
-            <h1 className="font-['Cinzel',serif] text-2xl font-bold text-[#44260a] mb-1.5 tracking-wide leading-tight">
+            <h1 className="font-['Cinzel',serif] text-xl sm:text-2xl font-bold text-[#44260a] mb-1.5 tracking-wide leading-tight">
               {product.name}
             </h1>
             {product.brand && (
-              <p className="font-['Cormorant_Garamond',serif] italic text-base text-[#b08050] mb-5">
+              <p className="font-['Cormorant_Garamond',serif] italic text-base text-[#b08050] mb-4 sm:mb-5">
                 {product.brand}
               </p>
             )}
 
-            <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-5" />
+            <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-4 sm:my-5" />
 
-            <div className="flex items-baseline gap-2.5 mb-5 flex-wrap">
-              <span className="font-['Cinzel',serif] text-3xl font-bold text-amber-700">
+            <div className="flex items-baseline gap-2.5 mb-4 sm:mb-5 flex-wrap">
+              <span className="font-['Cinzel',serif] text-2xl sm:text-3xl font-bold text-amber-700">
                 ₹{product.price}
               </span>
               {discount > 0 && (
                 <>
-                  <span className="text-lg text-amber-700/40 line-through">
+                  <span className="text-base sm:text-lg text-amber-700/40 line-through">
                     ₹{product.mrp}
                   </span>
                   <span className="bg-green-600/10 text-green-600 border border-green-600/20 rounded-lg px-2.5 py-0.5 text-xs font-bold">
@@ -979,16 +952,16 @@ export default function Buy() {
               )}
             </div>
 
-            <p className="font-['Cormorant_Garamond',serif] text-[17px] text-amber-900 leading-[1.75] mb-5 opacity-85">
+            <p className="font-['Cormorant_Garamond',serif] text-[15px] sm:text-[17px] text-amber-900 leading-[1.75] mb-4 sm:mb-5 opacity-85">
               {product.description}
             </p>
 
             {(product.features || []).length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-6">
+              <div className="flex flex-wrap gap-1.5 mb-5 sm:mb-6">
                 {product.features.map((f) => (
                   <span
                     key={f}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/8 border border-amber-400/20 text-amber-700 text-[11px] font-semibold tracking-wide"
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-amber-400/8 border border-amber-400/20 text-amber-700 text-[10px] sm:text-[11px] font-semibold tracking-wide"
                   >
                     ✦ {f}
                   </span>
@@ -996,10 +969,10 @@ export default function Buy() {
               </div>
             )}
 
-            <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-5" />
+            <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-4 sm:my-5" />
 
-            {/* Delivery */}
-            <div className="bg-white border border-amber-700/10 rounded-2xl p-4 flex gap-5 mb-6 flex-wrap">
+            {/* Delivery info */}
+            <div className="bg-white border border-amber-700/10 rounded-2xl p-3 sm:p-4 flex gap-3 sm:gap-5 mb-5 sm:mb-6 flex-wrap">
               {[
                 {
                   icon: "🚚",
@@ -1025,11 +998,11 @@ export default function Buy() {
                   key={title}
                   className="flex items-center gap-2 text-xs text-amber-900 flex-1"
                 >
-                  <span className="text-lg shrink-0">{icon}</span>
+                  <span className="text-base sm:text-lg shrink-0">{icon}</span>
                   <div>
                     <p className="font-semibold text-xs m-0">{title}</p>
                     <p
-                      className={`text-[11px] m-0 ${green !== undefined ? (green ? "text-green-600 font-semibold" : "text-red-500 font-semibold") : "text-amber-700/50"}`}
+                      className={`text-[10px] sm:text-[11px] m-0 ${green !== undefined ? (green ? "text-green-600 font-semibold" : "text-red-500 font-semibold") : "text-amber-700/50"}`}
                     >
                       {sub}
                     </p>
@@ -1039,7 +1012,7 @@ export default function Buy() {
             </div>
 
             {/* Qty */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-4 sm:mb-5">
               <button
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
                 className="w-9 h-9 rounded-lg border border-amber-700/20 bg-transparent text-amber-700 text-lg cursor-pointer flex items-center justify-center hover:bg-amber-400/8 hover:border-amber-400 transition-all"
@@ -1063,38 +1036,38 @@ export default function Buy() {
             </div>
 
             {/* CTA */}
-            <div className="flex gap-2.5 mb-6">
+            <div className="flex gap-2.5 mb-5 sm:mb-6">
               <button
                 disabled={product.stock === 0}
                 onClick={() => product.stock > 0 && setShowOrder(true)}
-                className={`flex-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none py-3.5 rounded-xl font-['Cinzel',serif] text-xs font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.42)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] ${product.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                className={`flex-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none py-3 sm:py-3.5 rounded-xl font-['Cinzel',serif] text-xs font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.42)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] ${product.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
               >
                 {product.stock > 0 ? "Buy Now" : "Out of Stock"}
               </button>
               <button
                 onClick={() => setWishlisted((w) => !w)}
-                className="w-12 h-12 rounded-xl border border-amber-700/20 bg-white flex items-center justify-center text-xl cursor-pointer hover:border-amber-400 hover:bg-amber-400/6 hover:scale-105 transition-all"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-amber-700/20 bg-white flex items-center justify-center text-xl cursor-pointer hover:border-amber-400 hover:bg-amber-400/6 hover:scale-105 transition-all"
                 title="Wishlist"
               >
                 {wishlisted ? "❤️" : "🤍"}
               </button>
             </div>
 
-            {/* Details */}
+            {/* Details table */}
             {tableRows.length > 0 && (
               <>
-                <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-5" />
-                <p className="font-['Cinzel',serif] text-[13px] font-semibold text-[#44260a] mb-3">
+                <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-4 sm:my-5" />
+                <p className="font-['Cinzel',serif] text-[12px] sm:text-[13px] font-semibold text-[#44260a] mb-3">
                   Product Details
                 </p>
                 <table className="w-full border-collapse">
                   <tbody>
                     {tableRows.map(([k, v]) => (
                       <tr key={k} className="even:bg-amber-400/3">
-                        <td className="px-3 py-2 text-[11px] text-amber-700/55 font-semibold tracking-wide uppercase border-b border-amber-700/6 w-28">
+                        <td className="px-2 sm:px-3 py-2 text-[10px] sm:text-[11px] text-amber-700/55 font-semibold tracking-wide uppercase border-b border-amber-700/6 w-24 sm:w-28">
                           {k}
                         </td>
-                        <td className="px-3 py-2 text-[13px] text-[#44260a] border-b border-amber-700/6">
+                        <td className="px-2 sm:px-3 py-2 text-[12px] sm:text-[13px] text-[#44260a] border-b border-amber-700/6">
                           {v}
                         </td>
                       </tr>
@@ -1112,11 +1085,11 @@ export default function Buy() {
             <p className="text-[10px] tracking-widest uppercase text-amber-700/45 font-semibold mb-2">
               You May Also Like
             </p>
-            <h2 className="font-['Cinzel',serif] text-xl font-bold text-[#44260a] mb-1">
+            <h2 className="font-['Cinzel',serif] text-lg sm:text-xl font-bold text-[#44260a] mb-1">
               Related Sacred Items
             </h2>
-            <div className="h-0.5 w-14 bg-linear-to-r from-amber-400 to-transparent rounded mb-6" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="h-0.5 w-14 bg-linear-to-r from-amber-400 to-transparent rounded mb-5 sm:mb-6" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {related.map((p) => {
                 const d =
                   p.mrp && p.price
@@ -1135,16 +1108,16 @@ export default function Buy() {
                         className="w-full aspect-square object-cover block bg-amber-400/5"
                       />
                     ) : (
-                      <div className="w-full aspect-square bg-amber-400/5 flex items-center justify-center text-4xl">
+                      <div className="w-full aspect-square bg-amber-400/5 flex items-center justify-center text-3xl sm:text-4xl">
                         🛍️
                       </div>
                     )}
-                    <div className="p-3">
-                      <p className="font-['Cinzel',serif] text-xs font-semibold text-[#44260a] mb-1.5 truncate">
+                    <div className="p-2.5 sm:p-3">
+                      <p className="font-['Cinzel',serif] text-[11px] sm:text-xs font-semibold text-[#44260a] mb-1.5 truncate">
                         {p.name}
                       </p>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-['Cinzel',serif] text-sm font-bold text-amber-700">
+                        <span className="font-['Cinzel',serif] text-xs sm:text-sm font-bold text-amber-700">
                           ₹{p.price}
                         </span>
                         {d > 0 && (

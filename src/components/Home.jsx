@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-
 import gemsImg from "../img/gems.png";
 import navratriImg from "../img/navratrisamagri.png";
-import pujaImg from "../img/pujasamagri.png";
 import rudrashaImg from "../img/rudraksha.png";
-import vedicImg from "../img/vedicbracelets.png";
 import CollageSection from "./CollageSection";
 import ItemsAtFront from "./ItemsAtFront";
 import Consult from "./Consult";
@@ -42,9 +39,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-amber-50 text-stone-800 font-serif-base">
-      {/* ── HERO ── */}
       <section id="home" className="relative h-[50vh] min-h-80 overflow-hidden">
-        {/* Slides */}
         {heroSlides.map((s, i) => (
           <div
             key={i}
@@ -64,9 +59,7 @@ export default function Home() {
           </div>
         ))}
 
-        {/* Content */}
         <div className="relative z-10 h-full flex items-center justify-between px-5 md:px-20 max-w-7xl mx-auto w-full">
-          {/* Text */}
           <div className="max-w-[58%] md:max-w-xl">
             <span className="inline-block mb-2 md:mb-3 text-amber-300 text-[10px] md:text-xs uppercase tracking-[4px] md:tracking-[5px]">
               Diviya Vedic Shop
@@ -79,21 +72,14 @@ export default function Home() {
             </p>
             <div className="mt-5 md:mt-8 flex flex-col md:flex-row gap-2 md:gap-3">
               <a
-                href="#products"
+                href="#all-products"
                 className="px-5 md:px-7 py-2.5 md:py-3 rounded-full bg-amber-600 text-white text-xs md:text-sm font-semibold hover:bg-amber-700 transition-all duration-200 shadow-lg text-center"
               >
                 Shop Sacred Items
               </a>
-              <a
-                href="#about"
-                className="px-5 md:px-7 py-2.5 md:py-3 rounded-full border border-white text-white text-xs md:text-sm hover:bg-white/10 transition-all duration-200 text-center"
-              >
-                Our Story
-              </a>
             </div>
           </div>
 
-          {/* OM Symbol */}
           <div
             className="flex items-center justify-center relative shrink-0"
             style={{
@@ -101,7 +87,6 @@ export default function Home() {
               height: "clamp(130px,28vw,320px)",
             }}
           >
-            {/* Glow ring */}
             <div
               className="absolute inset-0 rounded-full animate-pulse-glow"
               style={{
@@ -109,7 +94,6 @@ export default function Home() {
                   "radial-gradient(circle, rgba(251,191,36,0.18) 0%, rgba(180,83,9,0.10) 60%, transparent 100%)",
               }}
             />
-            {/* Spinning rings */}
             <div
               className="absolute rounded-full border border-amber-300/25 animate-spin-slow"
               style={{ inset: "5%" }}
@@ -119,7 +103,6 @@ export default function Home() {
               style={{ inset: "10%" }}
             />
 
-            {/* Orbit dots */}
             {ORBIT_DOTS.map((deg, i) => (
               <div
                 key={i}
@@ -134,7 +117,6 @@ export default function Home() {
               />
             ))}
 
-            {/* OM SVG */}
             <svg
               viewBox="0 0 200 200"
               xmlns="http://www.w3.org/2000/svg"
@@ -211,7 +193,6 @@ export default function Home() {
               />
             </svg>
 
-            {/* दिव्य label */}
             <div className="absolute bottom-[9%] left-1/2 -translate-x-1/2 z-10 text-center whitespace-nowrap">
               <p
                 className="text-amber-300/90 uppercase font-serif tracking-[5px]"
@@ -223,7 +204,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Slide dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {heroSlides.map((_, i) => (
             <button

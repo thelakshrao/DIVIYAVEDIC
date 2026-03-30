@@ -80,11 +80,11 @@ const EMPTY_FORM = {
 
 const statusColor = {
   Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Confirmed: "bg-blue-100   text-blue-700   border-blue-200",
+  Confirmed: "bg-blue-100 text-blue-700 border-blue-200",
   Processing: "bg-purple-100 text-purple-700 border-purple-200",
   Shipped: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  Delivered: "bg-green-100  text-green-700  border-green-200",
-  Cancelled: "bg-red-100    text-red-600    border-red-200",
+  Delivered: "bg-green-100 text-green-700 border-green-200",
+  Cancelled: "bg-red-100 text-red-600 border-red-200",
 };
 
 const inputCls =
@@ -102,7 +102,7 @@ const tdCls =
 
 const Card = ({ children, className = "" }) => (
   <div
-    className={`bg-white border border-amber-700/10 rounded-2xl p-6 shadow-sm relative overflow-hidden ${className}`}
+    className={`bg-white border border-amber-700/10 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden ${className}`}
   >
     <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
     {children}
@@ -148,9 +148,8 @@ export default function AdminDashboard() {
   const [editProduct, setEditProduct] = useState(null);
   const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [editSaving, setEditSaving] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
 
-  // ✅ Badge: persists across reloads using sessionStorage
-  // Once the user visits the Orders tab in this session, badge stays cleared
   const [ordersViewed, setOrdersViewed] = useState(
     () => sessionStorage.getItem("adminOrdersViewed") === "true",
   );
@@ -174,7 +173,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ When navigating to Orders, mark as viewed in sessionStorage
   const handleNav = (key) => {
     setActiveNav(key);
     setSidebar(false);
@@ -184,7 +182,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ Badge only shows for orders not yet viewed this session
   const activeOrdersCount = orders.filter(
     (o) => !["Delivered", "Cancelled"].includes(o.status),
   ).length;
@@ -395,7 +392,7 @@ export default function AdminDashboard() {
 
   const stats = [
     {
-      label: "Total Customers",
+      label: "Customers",
       value: customers.length,
       icon: "👥",
       delta: `${customers.filter((c) => c.role === "admin").length} admins`,
@@ -403,7 +400,7 @@ export default function AdminDashboard() {
       border: "border-blue-100",
     },
     {
-      label: "Total Products",
+      label: "Products",
       value: products.length,
       icon: "🛍️",
       delta: "Active listings",
@@ -411,7 +408,7 @@ export default function AdminDashboard() {
       border: "border-amber-100",
     },
     {
-      label: "Active Orders",
+      label: "Orders",
       value: activeOrdersCount,
       icon: "📦",
       delta: `${completedOrders.length} delivered`,
@@ -422,40 +419,104 @@ export default function AdminDashboard() {
       label: "Revenue",
       value: `₹${totalRevenue}`,
       icon: "💰",
-      delta: "From completed orders",
+      delta: "Completed",
       bg: "bg-purple-50",
       border: "border-purple-100",
     },
   ];
+
+  const renderUserTable = (list, isAdminTable) => {
+    if (list.length === 0) {
+      return (
+        <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-amber-700/40 text-center py-6">
+          No {isAdminTable ? "admins" : "customers"} found.
+        </p>
+      );
+    }
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              {["Name", "Email", "Phone", "Role", "Actions"].map((h) => (
+                <th key={h} className={thCls}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((c) => {
+              const isAdmin = c.role === "admin";
+              return (
+                <tr key={c.id} className="hover:bg-amber-50/60">
+                  <td className="px-3.5 py-3 text-[13px] text-amber-900 font-medium border-b border-amber-700/5">
+                    {c.name || "—"}
+                  </td>
+                  <td className={tdCls}>{c.email}</td>
+                  <td className={tdCls}>{c.phone || "—"}</td>
+                  <td className="px-3.5 py-3 border-b border-amber-700/5">
+                    <span
+                      className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${isAdmin ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-blue-100 text-blue-700 border-blue-200"}`}
+                    >
+                      {isAdmin ? "Admin" : "Customer"}
+                    </span>
+                  </td>
+                  <td className="px-3.5 py-3 border-b border-amber-700/5">
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => toggleRole(c)}
+                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all ${isAdmin ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"}`}
+                      >
+                        {isAdmin ? "→ Customer" : "→ Admin"}
+                      </button>
+                      <button
+                        onClick={() => deleteCustomer(c.id)}
+                        className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const renderContent = () => {
     switch (activeNav) {
       case "overview":
         return (
           <div>
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            {/* Stats: 2x2 on mobile, 4-col on desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
               {stats.map((s) => (
                 <div
                   key={s.label}
-                  className={`${s.bg} ${s.border} border rounded-2xl p-5 relative overflow-hidden shadow-sm`}
+                  className={`${s.bg} ${s.border} border rounded-2xl p-3 sm:p-5 relative overflow-hidden shadow-sm`}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-0.50 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
-                  <span className="absolute top-4 right-4 text-2xl opacity-20">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+                  <span className="absolute top-3 right-3 sm:top-4 sm:right-4 text-xl sm:text-2xl opacity-20">
                     {s.icon}
                   </span>
-                  <div className="font-['Cinzel',serif] text-3xl font-bold text-amber-800 leading-none mb-1">
+                  <div className="font-['Cinzel',serif] text-2xl sm:text-3xl font-bold text-amber-800 leading-none mb-1">
                     {s.value}
                   </div>
-                  <div className="text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
+                  <div className="text-[10px] sm:text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
                     {s.label}
                   </div>
-                  <div className="text-[11px] text-green-600 mt-1.5 font-medium">
+                  <div className="text-[10px] sm:text-[11px] text-green-600 mt-1 sm:mt-1.5 font-medium">
                     {s.delta}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-5">
+            {/* Recent cards: stacked on mobile, 2-col on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <Card>
                 <CardTitle>Recent Orders ({orders.length})</CardTitle>
                 {orders.length === 0 ? (
@@ -463,41 +524,43 @@ export default function AdminDashboard() {
                     No orders yet.
                   </p>
                 ) : (
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        {["Order ID", "Customer", "Total", "Status"].map(
-                          (h) => (
-                            <th key={h} className={thCls}>
-                              {h}
-                            </th>
-                          ),
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.slice(0, 5).map((o) => (
-                        <tr key={o.id} className="hover:bg-amber-50/60">
-                          <td className="px-3.5 py-3 text-[11px] text-amber-700/60 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
-                            {o.orderId || o.id}
-                          </td>
-                          <td className={tdCls}>
-                            {o.customerName || o.email || "—"}
-                          </td>
-                          <td className={tdCls}>
-                            ₹{o.total || o.grandTotal || 0}
-                          </td>
-                          <td className={tdCls}>
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusColor[o.status] || "bg-gray-100 text-gray-600 border-gray-200"}`}
-                            >
-                              {o.status || "Pending"}
-                            </span>
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr>
+                          {["Order ID", "Customer", "Total", "Status"].map(
+                            (h) => (
+                              <th key={h} className={thCls}>
+                                {h}
+                              </th>
+                            ),
+                          )}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {orders.slice(0, 5).map((o) => (
+                          <tr key={o.id} className="hover:bg-amber-50/60">
+                            <td className="px-3.5 py-3 text-[11px] text-amber-700/60 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
+                              {o.orderId || o.id}
+                            </td>
+                            <td className={tdCls}>
+                              {o.customerName || o.email || "—"}
+                            </td>
+                            <td className={tdCls}>
+                              ₹{o.total || o.grandTotal || 0}
+                            </td>
+                            <td className={tdCls}>
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusColor[o.status] || "bg-gray-100 text-gray-600 border-gray-200"}`}
+                              >
+                                {o.status || "Pending"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </Card>
               <Card>
@@ -507,32 +570,34 @@ export default function AdminDashboard() {
                     No products yet.
                   </p>
                 ) : (
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        {["Name", "Price", "Stock"].map((h) => (
-                          <th key={h} className={thCls}>
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.slice(0, 5).map((p) => (
-                        <tr key={p.id} className="hover:bg-amber-50/60">
-                          <td className={tdCls}>{p.name}</td>
-                          <td className={tdCls}>₹{p.price}</td>
-                          <td className={tdCls}>
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${p.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}
-                            >
-                              {p.stock > 0 ? `${p.stock} left` : "Out"}
-                            </span>
-                          </td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr>
+                          {["Name", "Price", "Stock"].map((h) => (
+                            <th key={h} className={thCls}>
+                              {h}
+                            </th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {products.slice(0, 5).map((p) => (
+                          <tr key={p.id} className="hover:bg-amber-50/60">
+                            <td className={tdCls}>{p.name}</td>
+                            <td className={tdCls}>₹{p.price}</td>
+                            <td className={tdCls}>
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${p.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}
+                              >
+                                {p.stock > 0 ? `${p.stock} left` : "Out"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </Card>
             </div>
@@ -590,7 +655,6 @@ export default function AdminDashboard() {
                   <tbody>
                     {orders.map((o) => (
                       <tr key={o.id} className="hover:bg-amber-50/60">
-                        {/* ✅ Shows DVS order ID since document ID IS the DVS ID now */}
                         <td className="px-3.5 py-3 text-[12px] text-amber-700 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
                           {o.orderId || o.id}
                         </td>
@@ -638,77 +702,93 @@ export default function AdminDashboard() {
           </Card>
         );
 
-      case "customers":
+      case "customers": {
+        const q = customerSearch.trim().toLowerCase();
+        const filtered = q
+          ? customers.filter(
+              (c) =>
+                (c.name || "").toLowerCase().includes(q) ||
+                (c.email || "").toLowerCase().includes(q) ||
+                (c.phone || "").toLowerCase().includes(q) ||
+                (c.id || "").toLowerCase().includes(q),
+            )
+          : customers;
+
+        const admins = filtered.filter((c) => c.role === "admin");
+        const nonAdmins = filtered.filter((c) => c.role !== "admin");
+
         return (
-          <Card>
-            <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
-              <CardTitle>All Customers ({customers.length})</CardTitle>
-              <div className="flex gap-2">
+          <div className="space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-['Cinzel',serif] text-base font-semibold text-amber-900">
+                  All Users ({customers.length})
+                </h2>
+                <p className="text-[12px] text-amber-700/45 mt-0.5">
+                  Manage roles — changes reflect instantly in Firestore
+                </p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="inline-flex px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-semibold">
                   {customers.filter((c) => c.role === "admin").length} Admins
                 </span>
                 <span className="inline-flex px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-semibold">
                   {customers.filter((c) => c.role !== "admin").length} Customers
                 </span>
+                <div className="relative">
+                  <svg
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-700/40 pointer-events-none"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    placeholder="Search name, email, phone, ID…"
+                    className="pl-8 pr-3 py-2 text-[12px] bg-white border border-amber-700/20 rounded-xl text-amber-900 outline-none focus:border-amber-400 transition-all w-full sm:w-60 placeholder:text-amber-700/30"
+                  />
+                  {customerSearch && (
+                    <button
+                      onClick={() => setCustomerSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-700/40 hover:text-amber-700 bg-transparent border-none cursor-pointer text-xs leading-none"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-            {customers.length === 0 ? (
-              <p className="font-['Cormorant_Garamond',serif] italic text-[14px] text-amber-700/35 text-center py-10">
-                No customers yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      {["Name", "Email", "Phone", "Role", "Actions"].map(
-                        (h) => (
-                          <th key={h} className={thCls}>
-                            {h}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customers.map((c) => (
-                      <tr key={c.id} className="hover:bg-amber-50/60">
-                        <td className="px-3.5 py-3 text-[13px] text-amber-900 font-medium border-b border-amber-700/5">
-                          {c.name || "—"}
-                        </td>
-                        <td className={tdCls}>{c.email}</td>
-                        <td className={tdCls}>{c.phone || "—"}</td>
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          <span
-                            className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${c.role === "admin" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-blue-100 text-blue-700 border-blue-200"}`}
-                          >
-                            {c.role === "admin" ? "Admin" : "Customer"}
-                          </span>
-                        </td>
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          <div className="flex gap-2 flex-wrap">
-                            <button
-                              onClick={() => toggleRole(c)}
-                              className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all ${c.role === "admin" ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"}`}
-                            >
-                              {c.role === "admin" ? "→ Customer" : "→ Admin"}
-                            </button>
-                            <button
-                              onClick={() => deleteCustomer(c.id)}
-                              className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <Card>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-flex px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-semibold">
+                  ⚙️ Admins ({admins.length})
+                </span>
+                <div className="flex-1 h-px bg-amber-700/8" />
               </div>
-            )}
-          </Card>
+              {renderUserTable(admins, true)}
+            </Card>
+            <Card>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-flex px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                  👤 Customers ({nonAdmins.length})
+                </span>
+                <div className="flex-1 h-px bg-amber-700/8" />
+              </div>
+              {renderUserTable(nonAdmins, false)}
+            </Card>
+          </div>
         );
+      }
 
       case "products":
         return (
@@ -719,7 +799,7 @@ export default function AdminDashboard() {
               </p>
               <button
                 onClick={() => handleNav("upload")}
-                className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] transition-all shadow-[0_4px_14px_rgba(245,158,11,0.25)] inline-flex items-center gap-1.5"
+                className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-4 sm:px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] transition-all shadow-[0_4px_14px_rgba(245,158,11,0.25)] inline-flex items-center gap-1.5"
               >
                 ➕ Upload New
               </button>
@@ -835,7 +915,7 @@ export default function AdminDashboard() {
                 Upload up to 6 images. First image is the cover.
               </p>
               <div
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${dragOver ? "border-amber-400 bg-amber-50" : "border-amber-700/15 hover:border-amber-400/50 hover:bg-amber-50/40"}`}
+                className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all ${dragOver ? "border-amber-400 bg-amber-50" : "border-amber-700/15 hover:border-amber-400/50 hover:bg-amber-50/40"}`}
                 onClick={() => fileInputRef.current.click()}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -868,7 +948,7 @@ export default function AdminDashboard() {
                 <div
                   className="grid gap-2.5 mt-3.5"
                   style={{
-                    gridTemplateColumns: "repeat(auto-fill,minmax(90px,1fr))",
+                    gridTemplateColumns: "repeat(auto-fill,minmax(80px,1fr))",
                   }}
                 >
                   {previews.map((src, i) => (
@@ -916,7 +996,7 @@ export default function AdminDashboard() {
               <p className="font-['Cinzel',serif] text-[15px] font-semibold text-amber-900 mb-5">
                 Basic Information
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   {
                     label: "Product Name *",
@@ -964,7 +1044,7 @@ export default function AdminDashboard() {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-col gap-1.5 col-span-2">
+                <div className="flex flex-col gap-1.5 sm:col-span-2">
                   <label className={labelCls}>Description *</label>
                   <textarea
                     className={textareaCls}
@@ -983,7 +1063,7 @@ export default function AdminDashboard() {
               <p className="font-['Cinzel',serif] text-[15px] font-semibold text-amber-900 mb-5">
                 Pricing &amp; Stock
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   {
                     label: "Selling Price (₹) *",
@@ -1075,7 +1155,7 @@ export default function AdminDashboard() {
               <button
                 type="submit"
                 disabled={uploading}
-                className={`bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-9 py-3.5 rounded-xl font-['Cinzel',serif] text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.4)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] flex items-center gap-2 ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-6 sm:px-9 py-3.5 rounded-xl font-['Cinzel',serif] text-[11px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.4)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] flex items-center gap-2 ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {uploading ? (
                   <>
@@ -1092,7 +1172,7 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => handleNav("products")}
-                className="bg-transparent text-amber-700/50 border border-amber-700/15 px-6 py-3.5 rounded-xl text-[13px] font-medium cursor-pointer hover:bg-amber-50 hover:border-amber-700/30 hover:text-amber-700 transition-all"
+                className="bg-transparent text-amber-700/50 border border-amber-700/15 px-4 sm:px-6 py-3.5 rounded-xl text-[13px] font-medium cursor-pointer hover:bg-amber-50 hover:border-amber-700/30 hover:text-amber-700 transition-all"
               >
                 Cancel
               </button>
@@ -1103,7 +1183,7 @@ export default function AdminDashboard() {
       case "revenue":
         return (
           <div className="space-y-5">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {[
                 {
                   label: "Total Revenue",
@@ -1131,16 +1211,16 @@ export default function AdminDashboard() {
               ].map((s) => (
                 <div
                   key={s.label}
-                  className={`${s.bg} ${s.border} border rounded-2xl p-5 relative overflow-hidden shadow-sm`}
+                  className={`${s.bg} ${s.border} border rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-sm`}
                 >
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
-                  <span className="absolute top-4 right-4 text-2xl opacity-20">
+                  <span className="absolute top-3 right-3 sm:top-4 sm:right-4 text-xl sm:text-2xl opacity-20">
                     {s.icon}
                   </span>
-                  <div className="font-['Cinzel',serif] text-3xl font-bold text-amber-800 leading-none mb-1">
+                  <div className="font-['Cinzel',serif] text-2xl sm:text-3xl font-bold text-amber-800 leading-none mb-1">
                     {s.value}
                   </div>
-                  <div className="text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
+                  <div className="text-[10px] sm:text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
                     {s.label}
                   </div>
                 </div>
@@ -1159,40 +1239,42 @@ export default function AdminDashboard() {
                   </p>
                 </div>
               ) : (
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      {["Order ID", "Customer", "Items", "Total", "Date"].map(
-                        (h) => (
-                          <th key={h} className={thCls}>
-                            {h}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completedOrders.map((o) => (
-                      <tr key={o.id} className="hover:bg-amber-50/60">
-                        <td className="px-3.5 py-3 text-[12px] text-amber-700 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
-                          {o.orderId || o.id}
-                        </td>
-                        <td className={tdCls}>
-                          {o.customerName || o.email || "—"}
-                        </td>
-                        <td className={tdCls}>{(o.items || []).length}</td>
-                        <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
-                          ₹{o.total || o.grandTotal || 0}
-                        </td>
-                        <td className="px-3.5 py-3 text-[12px] text-amber-700/50 border-b border-amber-700/5">
-                          {o.createdAt
-                            ?.toDate?.()
-                            ?.toLocaleDateString?.("en-IN") || "—"}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        {["Order ID", "Customer", "Items", "Total", "Date"].map(
+                          (h) => (
+                            <th key={h} className={thCls}>
+                              {h}
+                            </th>
+                          ),
+                        )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {completedOrders.map((o) => (
+                        <tr key={o.id} className="hover:bg-amber-50/60">
+                          <td className="px-3.5 py-3 text-[12px] text-amber-700 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
+                            {o.orderId || o.id}
+                          </td>
+                          <td className={tdCls}>
+                            {o.customerName || o.email || "—"}
+                          </td>
+                          <td className={tdCls}>{(o.items || []).length}</td>
+                          <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
+                            ₹{o.total || o.grandTotal || 0}
+                          </td>
+                          <td className="px-3.5 py-3 text-[12px] text-amber-700/50 border-b border-amber-700/5">
+                            {o.createdAt
+                              ?.toDate?.()
+                              ?.toLocaleDateString?.("en-IN") || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
           </div>
@@ -1211,7 +1293,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#fdf8f0] flex">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
@@ -1219,7 +1300,6 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── SIDEBAR ── */}
       <aside
         className={`fixed lg:sticky top-0 left-0 h-screen w-60 bg-white border-r border-amber-700/10 flex flex-col py-7 shrink-0 overflow-y-auto shadow-sm z-50 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
@@ -1252,7 +1332,6 @@ export default function AdminDashboard() {
                     {item.icon}
                   </span>
                   <span className="flex-1">{item.label}</span>
-                  {/* ✅ Badge only shows if NOT yet viewed this session */}
                   {item.key === "orders" && newOrderBadge > 0 && (
                     <span className="bg-amber-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                       {newOrderBadge}
@@ -1276,10 +1355,7 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
-
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile top bar */}
         <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-amber-700/10 px-4 h-14 flex items-center justify-between shadow-sm">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
           <button
@@ -1297,13 +1373,13 @@ export default function AdminDashboard() {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1 overflow-y-auto px-4 lg:px-10 py-6 lg:py-9">
-          <div className="mb-8">
-            <h1 className="font-['Cinzel',serif] text-[22px] font-bold text-amber-900 m-0 mb-1">
+        <main className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-10 py-5 sm:py-6 lg:py-9">
+          <div className="mb-5 sm:mb-8">
+            <h1 className="font-['Cinzel',serif] text-[18px] sm:text-[22px] font-bold text-amber-900 m-0 mb-1">
               {navItems.find((n) => n.key === activeNav)?.icon}{" "}
               {navItems.find((n) => n.key === activeNav)?.label}
             </h1>
-            <p className="text-[13px] text-amber-700/45 m-0">
+            <p className="text-[12px] sm:text-[13px] text-amber-700/45 m-0">
               {activeNav === "overview" && "Your store at a glance"}
               {activeNav === "upload" && "Add a new product to your store"}
               {activeNav === "products" && "Manage all your products"}
@@ -1316,10 +1392,9 @@ export default function AdminDashboard() {
         </main>
       </div>
 
-      {/* ── EDIT MODAL ── */}
       {editProduct && (
         <Modal onClose={() => setEditProduct(null)}>
-          <div className="p-6">
+          <div className="p-5 sm:p-6">
             <div className="flex justify-between items-center mb-5">
               <p className="font-['Cinzel',serif] text-base font-semibold text-amber-900">
                 Edit Product
@@ -1448,9 +1523,8 @@ export default function AdminDashboard() {
         </Modal>
       )}
 
-      {/* ── TOAST ── */}
       {showToast && (
-        <div className="fixed bottom-8 right-8 bg-linear-to-br from-amber-400 to-amber-600 text-white px-6 py-3.5 rounded-2xl font-['Cinzel',serif] text-xs font-bold tracking-wide shadow-[0_8px_32px_rgba(245,158,11,0.4)] z-50 flex items-center gap-2.5">
+        <div className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 bg-linear-to-br from-amber-400 to-amber-600 text-white px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl font-['Cinzel',serif] text-xs font-bold tracking-wide shadow-[0_8px_32px_rgba(245,158,11,0.4)] z-50 flex items-center gap-2.5">
           <span>✦</span> {toastMsg}
         </div>
       )}

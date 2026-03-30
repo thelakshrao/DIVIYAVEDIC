@@ -98,7 +98,6 @@ function FanCarousel() {
               className="w-full h-full object-cover block"
               style={{ objectPosition: "center 20%" }}
             />
-            {/* watermark block bottom-right */}
             <div className="absolute bottom-0 right-0 w-30 h-7 bg-black/55 rounded-br-2xl z-10" />
 
             {isCenter && (
@@ -121,7 +120,6 @@ function FanCarousel() {
         );
       })}
 
-      {/* Prev / Next arrows */}
       <button
         onClick={prev}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8.5 h-8.5 rounded-full bg-white border border-amber-300 shadow-md flex items-center justify-center cursor-pointer text-amber-700 text-lg"
@@ -135,7 +133,6 @@ function FanCarousel() {
         ›
       </button>
 
-      {/* Dots */}
       <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5">
         {images.map((_, i) => (
           <button
@@ -156,7 +153,6 @@ function FanCarousel() {
 export default function CollageSection() {
   return (
     <section className="bg-white py-12 md:py-20 px-5 md:px-6 relative overflow-hidden">
-      {/* OM decoration — bottom right */}
       <div className="absolute -bottom-20 -right-15 w-87.5 h-87.5 z-0 pointer-events-none select-none">
         <div
           className="absolute inset-0 rounded-full animate-pulse-glow"
@@ -260,9 +256,7 @@ export default function CollageSection() {
         </svg>
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 md:gap-12 items-start font-serif-base relative z-10">
-        {/* Left: text */}
         <div className="lg:w-[42%] w-full">
           <p className="text-xs uppercase tracking-[6px] text-amber-600 mb-2 md:mb-3">
             What We Offer
@@ -292,21 +286,14 @@ export default function CollageSection() {
 
           <div className="flex gap-3 flex-wrap">
             <a
-              href="#products"
+              href="#productlisted"
               className="px-5 md:px-6 py-2.5 rounded-full bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md"
             >
               Browse Collection
             </a>
-            <a
-              href="#about"
-              className="px-5 md:px-6 py-2.5 rounded-full border border-amber-600 text-amber-700 text-sm hover:bg-amber-50 transition-all duration-200"
-            >
-              Our Story
-            </a>
           </div>
         </div>
 
-        {/* Right: carousel */}
         <div className="lg:w-[58%] w-full flex items-center justify-center pt-8 md:pt-10">
           <div className="w-full max-w-120">
             <FanCarousel />
