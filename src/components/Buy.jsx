@@ -234,6 +234,7 @@ function OrderModal({ product, qty, onClose }) {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const newOrderId = await generateOrderId();
+
       const orderData = {
         orderId: newOrderId,
         productId: product.id,
@@ -264,7 +265,40 @@ function OrderModal({ product, qty, onClose }) {
         email: user.email || addr.email,
         createdAt: serverTimestamp(),
       };
+
       await setDoc(doc(db, "orders", newOrderId), orderData);
+
+      const BOT_TOKEN = "8669188610:AAGwDmjidJ43Nn0GlNR5AWSMTxYfhv5SsBw";
+      const CHAT_ID = "6261841518";
+
+      const telegramMsg = `
+<b>🚀 NEW ORDER: ${newOrderId}</b>
+---------------------------
+<b>📦 Product:</b> ${product.name}
+<b>🔢 Qty:</b> ${qty}
+<b>💰 Total:</b> ₹${grandTotal}
+<b>💳 Payment:</b> ${payMode.toUpperCase()}
+
+<b>👤 Customer:</b> ${orderData.customerName}
+<b>📞 Phone:</b> ${addr.phone}
+<b>📧 Email:</b> ${orderData.email}
+
+<b>📍 Address:</b>
+${addr.line1}${addr.line2 ? ", " + addr.line2 : ""},
+${addr.city}, ${addr.state} - ${addr.pincode}
+---------------------------
+      `;
+
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: telegramMsg,
+          parse_mode: "HTML",
+        }),
+      });
+
       setOrderId(newOrderId);
       setStep(4);
     } catch (e) {
@@ -278,7 +312,7 @@ function OrderModal({ product, qty, onClose }) {
     <div
       ref={overlayRef}
       onClick={(e) => e.target === overlayRef.current && onClose()}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4"
       style={{ background: "rgba(10,7,4,0.72)", backdropFilter: "blur(6px)" }}
     >
       <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}} @keyframes checkPop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}} .check-pop{animation:checkPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both}`}</style>
