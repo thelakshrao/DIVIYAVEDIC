@@ -16,7 +16,6 @@ const AdminRoute = ({ children }) => {
         return;
       }
 
-      // ⭐ CACHE RESULT
       const cachedRole = localStorage.getItem("role");
       if (cachedRole) {
         setIsAdmin(cachedRole === "admin");
@@ -29,7 +28,7 @@ const AdminRoute = ({ children }) => {
 
       if (snap.exists()) {
         const role = snap.data().role;
-        localStorage.setItem("role", role); // ⭐ cache
+        localStorage.setItem("role", role); 
         setIsAdmin(role === "admin");
       }
 

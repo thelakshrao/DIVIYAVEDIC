@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { OmLogo } from "./Navbar";
 
 const ORBIT_DOTS = [0, 45, 90, 135, 180, 225, 270, 315];
@@ -140,18 +140,18 @@ const socials = [
 
 const footerLinks = {
   Shop: [
-    { label: "Rudraksha Beads", href: "/rudraksha" },
-    { label: "Sacred Gemstones", href: "/gemstones" },
-    { label: "Vedic Bracelets", href: "#" },
-    { label: "Puja Samagri", href: "/puja" },
-    { label: "Yantras", href: "#" },
+    { label: "Rudraksha Beads", href: "/shop?cat=Rudraksha" },
+    { label: "Sacred Gemstones", href: "/shop?cat=Gemstones" },
+    { label: "Vedic Bracelets", href: "/shop?cat=Bracelets" },
+    { label: "Puja Samagri", href: "/shop?cat=Puja Samagri" },
+    { label: "Yantras", href: "/shop?cat=Yantras" },
   ],
   Support: [
-    { label: "Book Consultation", href: "#" },
-    { label: "Track Your Order", href: "#" },
-    { label: "Returns & Exchange", href: "#" },
-    { label: "Shipping Policy", href: "#" },
-    { label: "FAQ", href: "#" },
+    { label: "Book Consultation", href: "https://www.seemaaastrologer.com/" },
+    { label: "Track Your Order", href: "/orders" },
+    { label: "Returns & Exchange", href: "/policy" },
+    { label: "Shipping Policy", href: "/policy" },
+    { label: "FAQ", href: "/faq" },
   ],
   Company: [
     { label: "Our Story", href: "#about" },
@@ -177,6 +177,7 @@ const contacts = [
 ];
 
 export default function Footer() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -192,7 +193,6 @@ export default function Footer() {
     <>
       <Keyframes />
 
-      {/* ── Trust badges bar ── */}
       <div
         className="w-full border-t border-b border-amber-900/10 py-3"
         style={{ background: "#fff" }}
@@ -219,9 +219,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Main footer ── */}
       <footer className="relative overflow-hidden bg-stone-50">
-        {/* Ambient bg */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -234,12 +232,10 @@ export default function Footer() {
         <OmBg />
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-6">
-          {/* ── TOP: Brand + Newsletter ── */}
           <div
             className="flex flex-col lg:flex-row gap-8 mb-8 pb-8"
             style={{ borderBottom: "1px solid rgba(180,83,9,0.1)" }}
           >
-            {/* Brand */}
             <div className="lg:w-72 shrink-0">
               <div className="flex items-center gap-3 mb-4">
                 <OmLogo size={40} />
@@ -280,7 +276,6 @@ export default function Footer() {
                 and Rudraksha, energised with intention.
               </p>
 
-              {/* Socials */}
               <div className="flex items-center gap-2">
                 {socials.map((s) => (
                   <a
@@ -308,7 +303,6 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Newsletter */}
             <div className="flex-1 lg:pl-6">
               <div className="flex items-center gap-3 mb-2">
                 <div
@@ -393,7 +387,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ── MIDDLE: Link columns ── */}
           <div
             className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8 pb-6"
             style={{ borderBottom: "1px solid rgba(180,83,9,0.1)" }}
@@ -411,19 +404,30 @@ export default function Footer() {
                 >
                   {col}
                 </h4>
+
                 <ul className="list-none m-0 p-0 flex flex-col gap-2">
                   {links.map((lnk) => (
                     <li key={lnk.label}>
-                      <a
-                        href={lnk.href}
-                        className="no-underline italic transition-colors duration-200 text-stone-600 hover:text-amber-700"
+                      <button
+                        onClick={() => {
+                          if (lnk.href.startsWith("/")) {
+                            navigate(lnk.href);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          } else if (lnk.href.startsWith("#")) {
+                            const element = document.querySelector(lnk.href);
+                            element?.scrollIntoView({ behavior: "smooth" });
+                          } else {
+                            window.open(lnk.href, "_blank");
+                          }
+                        }}
+                        className="bg-transparent border-none p-0 italic text-left transition-colors duration-200 text-stone-600 hover:text-amber-700 cursor-pointer"
                         style={{
                           fontFamily: "'EB Garamond',serif",
                           fontSize: 13,
                         }}
                       >
                         {lnk.label}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -431,7 +435,6 @@ export default function Footer() {
             ))}
           </div>
 
-          {/* ── Contact strip ── */}
           <div className="flex flex-wrap justify-between gap-4 mb-8">
             {contacts.map((c) => (
               <div key={c.text} className="flex items-center gap-2">
@@ -446,7 +449,6 @@ export default function Footer() {
             ))}
           </div>
 
-          {/* ── Bottom copyright ── */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-200 pt-6">
             <p
               className="italic m-0 text-stone-400"

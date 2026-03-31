@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-
 import emailjs from "@emailjs/browser";
-
 import { useNavigate, useLocation } from "react-router-dom";
-
 import { db } from "./Firebase";
-
 import { doc, setDoc } from "firebase/firestore";
+import CartSidebar from "./Cart";
 
 const sidebarInputStyle = {
   padding: "12px",
@@ -348,6 +345,8 @@ export default function Navbar() {
   const location = useLocation();
 
   const navigate = useNavigate();
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -365,6 +364,19 @@ export default function Navbar() {
     window.addEventListener("resize", onResize);
 
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const update = async () => {
+      try {
+        const { getCartItems } = await import("./Cart");
+        const items = await getCartItems();
+        setCartCount(items.reduce((s, i) => s + i.qty, 0));
+      } catch {}
+    };
+    update();
+    window.addEventListener("cartUpdated", update);
+    return () => window.removeEventListener("cartUpdated", update);
   }, []);
 
   useEffect(() => {
@@ -702,10 +714,14 @@ export default function Navbar() {
                 className="icon-btn"
                 title="Cart"
                 style={{ position: "relative" }}
+                onClick={() => setCartOpen(true)}
               >
                 <CartIcon />
-
-                <span style={badgeStyle}>3</span>
+                {cartCount > 0 && (
+                  <span style={badgeStyle}>
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -1028,6 +1044,7 @@ export default function Navbar() {
           </span>
         </div>
       </div>
+      <CartSidebar open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }

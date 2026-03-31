@@ -9,6 +9,7 @@ import {
   setDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { addToCart } from "./Cart";
 
 const generateOrderId = async () => {
   try {
@@ -954,7 +955,6 @@ export default function Buy() {
             )}
           </div>
 
-          {/* Info */}
           <div>
             <div className="inline-flex items-center gap-1.5 bg-amber-400/10 border border-amber-700/18 text-amber-700 rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-widest uppercase mb-3">
               {product.category}
@@ -1005,7 +1005,6 @@ export default function Buy() {
 
             <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-4 sm:my-5" />
 
-            {/* Delivery info */}
             <div className="bg-white border border-amber-700/10 rounded-2xl p-3 sm:p-4 flex gap-3 sm:gap-5 mb-5 sm:mb-6 flex-wrap">
               {[
                 {
@@ -1069,15 +1068,22 @@ export default function Buy() {
               </span>
             </div>
 
-            {/* CTA */}
             <div className="flex gap-2.5 mb-5 sm:mb-6">
+              {/* Buy Now Button */}
               <button
-                disabled={product.stock === 0}
-                onClick={() => product.stock > 0 && setShowOrder(true)}
-                className={`flex-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none py-3 sm:py-3.5 rounded-xl font-['Cinzel',serif] text-xs font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.42)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)] ${product.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+                onClick={() => setShowOrder(true)}
+                className="flex-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none py-3 sm:py-3.5 rounded-xl font-['Cinzel',serif] text-xs font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.42)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)]"
               >
-                {product.stock > 0 ? "Buy Now" : "Out of Stock"}
+                {product.stock > 0 ? "Buy Now" : "Pre-Order (Out of Stock)"}
               </button>
+
+              <button
+                onClick={() => addToCart(product, qty)}
+                className="flex-1 bg-linear-to-br from-amber-400 to-amber-600 text-amber-50 border-none py-3 sm:py-3.5 rounded-xl font-['Cinzel',serif] text-xs font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(245,158,11,0.42)] transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)]"
+              >
+                Add to Cart
+              </button>
+
               <button
                 onClick={() => setWishlisted((w) => !w)}
                 className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-amber-700/20 bg-white flex items-center justify-center text-xl cursor-pointer hover:border-amber-400 hover:bg-amber-400/6 hover:scale-105 transition-all"
@@ -1087,7 +1093,6 @@ export default function Buy() {
               </button>
             </div>
 
-            {/* Details table */}
             {tableRows.length > 0 && (
               <>
                 <div className="h-px bg-linear-to-r from-amber-700/10 via-amber-700/4 to-transparent my-4 sm:my-5" />
@@ -1113,7 +1118,6 @@ export default function Buy() {
           </div>
         </div>
 
-        {/* Related */}
         {related.length > 0 && (
           <div>
             <p className="text-[10px] tracking-widest uppercase text-amber-700/45 font-semibold mb-2">
