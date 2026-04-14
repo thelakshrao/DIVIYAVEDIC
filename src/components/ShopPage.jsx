@@ -2,6 +2,50 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { db } from "./Firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { imgUrl } from "../utils/cloudinary";
+
+const ProductImage = ({ src, alt }) => {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  const placeholderUrl = src.replace(
+    "/upload/",
+    "/upload/w_20,f_auto,q_auto,e_blur:1000/",
+  );
+  const optimizedUrl = src;
+
+  return (
+    <div
+      className="relative overflow-hidden w-full"
+      style={{ aspectRatio: "1" }}
+    >
+      {!imgLoaded && (
+        <img
+          src={placeholderUrl}
+          className="w-full h-full object-cover absolute inset-0 scale-110 blur-lg"
+          alt="loading"
+        />
+      )}
+      <img
+        src={optimizedUrl}
+        alt={alt}
+        onLoad={() => setImgLoaded(true)}
+        className={`w-full h-full object-cover block transition-opacity duration-700 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+        loading="lazy"
+      />
+    </div>
+  );
+};
+
+const SkeletonCard = () => (
+  <div className="bg-white rounded-xl overflow-hidden border border-amber-700/5">
+    <div className="skeleton-box w-full aspect-square" />
+    <div className="p-4">
+      <div className="skeleton-box h-4 w-3/4 mb-2 rounded" />
+      <div className="skeleton-box h-3 w-1/2 mb-4 rounded" />
+      <div className="skeleton-box h-8 w-full rounded-lg" />
+    </div>
+  </div>
+);
 
 const CATEGORIES = [
   "All",
@@ -164,7 +208,6 @@ export default function ShopPage() {
         <div className="absolute bottom-2 left-5 pointer-events-none">
           <SwastikaSVG size={90} opacity={0.04} />
         </div>
-
         <div className="max-w-300 mx-auto px-6 text-center relative z-10">
           <p className="text-[10px] tracking-[0.25em] uppercase text-amber-700/45 font-semibold mb-2">
             {activeCat === "All" ? "Complete Collection" : activeCat}
@@ -182,8 +225,7 @@ export default function ShopPage() {
               ? "Explore our complete range of vedic & spiritual items"
               : `Explore our hand-selected ${activeCat.toLowerCase()} collection`}
           </p>
-          <div className="h-0.5 w-16 bg-grlineardient-to-r from-transparent via-amber-400 to-transparent mx-auto mb-6" />
-
+          <div className="h-0.5 w-16 bg-linear-to-r from-transparent via-amber-400 to-transparent mx-auto mb-6" />
           <div className="flex justify-center">
             <div className="relative w-full max-w-100">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-700/40 text-base pointer-events-none">
@@ -206,7 +248,6 @@ export default function ShopPage() {
         <div className="absolute top-0 -right-2 pointer-events-none">
           <SwastikaSVG size={100} opacity={0.03} />
         </div>
-
         <div className="flex justify-between items-center mb-6 flex-wrap gap-2.5">
           <p className="font-['Cormorant_Garamond',serif] italic text-base text-amber-700/50">
             {loading
@@ -224,8 +265,17 @@ export default function ShopPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-16 font-['Cormorant_Garamond',serif] italic text-lg text-amber-700/40">
-            Loading sacred items…
+          <div
+            className="sp-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,1fr)",
+              gap: 20,
+            }}
+          >
+            {[...Array(8)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
@@ -269,12 +319,7 @@ export default function ShopPage() {
                     </div>
                   )}
                   {p.images?.[0] ? (
-                    <img
-                      src={p.images[0]}
-                      alt={p.name}
-                      className="w-full object-cover block"
-                      style={{ aspectRatio: "1" }}
-                    />
+                    <ProductImage src={imgUrl(p.images[0], 350)} alt={p.name} />
                   ) : (
                     <div
                       className="w-full flex items-center justify-center text-5xl"

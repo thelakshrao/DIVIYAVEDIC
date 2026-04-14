@@ -10,6 +10,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { addToCart } from "./Cart";
+import { imgUrl } from "../utils/cloudinary";
 
 const generateOrderId = async () => {
   try {
@@ -361,7 +362,7 @@ ${addr.city}, ${addr.state} - ${addr.pincode}
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-amber-700/12 shrink-0">
               {product.images?.[0] ? (
                 <img
-                  src={product.images[0]}
+                  src={imgUrl(product.images[0])}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -928,7 +929,7 @@ export default function Buy() {
               )}
               {images[activeImg] ? (
                 <img
-                  src={images[activeImg]}
+                  src={imgUrl(images[activeImg])}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -1141,7 +1142,7 @@ export default function Buy() {
                   >
                     {p.images?.[0] ? (
                       <img
-                        src={p.images[0]}
+                        src={imgUrl(p.images[0])}
                         alt={p.name}
                         className="w-full aspect-square object-cover block bg-amber-400/5"
                       />

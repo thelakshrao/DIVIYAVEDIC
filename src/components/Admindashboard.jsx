@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
+import { imgUrl } from "../utils/cloudinary";
 
 const FEATURES = [
   "Returnable",
@@ -80,11 +81,11 @@ const EMPTY_FORM = {
 
 const statusColor = {
   Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Confirmed: "bg-blue-100 text-blue-700 border-blue-200",
+  Confirmed: "bg-blue-100   text-blue-700   border-blue-200",
   Processing: "bg-purple-100 text-purple-700 border-purple-200",
   Shipped: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  Delivered: "bg-green-100 text-green-700 border-green-200",
-  Cancelled: "bg-red-100 text-red-600 border-red-200",
+  Delivered: "bg-green-100  text-green-700  border-green-200",
+  Cancelled: "bg-red-100    text-red-600    border-red-200",
 };
 
 const inputCls =
@@ -138,7 +139,6 @@ export default function AdminDashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const fileInputRef = useRef();
-
   const [form, setForm] = useState(EMPTY_FORM);
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
@@ -149,7 +149,6 @@ export default function AdminDashboard() {
   const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [editSaving, setEditSaving] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
-
   const [ordersViewed, setOrdersViewed] = useState(
     () => sessionStorage.getItem("adminOrdersViewed") === "true",
   );
@@ -294,7 +293,7 @@ export default function AdminDashboard() {
       price: p.price || "",
       mrp: p.mrp || "",
       stock: p.stock || "",
-      deliveryFee: p.deliveryFee ?? "0",
+      deliveryFee: p.deliveryFee ?? 0,
       deliveryDays: p.deliveryDays || DELIVERY_DAYS[0],
       features: p.features || [],
       weight: p.weight || "",
@@ -426,13 +425,12 @@ export default function AdminDashboard() {
   ];
 
   const renderUserTable = (list, isAdminTable) => {
-    if (list.length === 0) {
+    if (list.length === 0)
       return (
         <p className="font-['Cormorant_Garamond',serif] italic text-[13px] text-amber-700/40 text-center py-6">
           No {isAdminTable ? "admins" : "customers"} found.
         </p>
       );
-    }
     return (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
@@ -492,7 +490,6 @@ export default function AdminDashboard() {
       case "overview":
         return (
           <div>
-            {/* Stats: 2x2 on mobile, 4-col on desktop */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
               {stats.map((s) => (
                 <div
@@ -515,7 +512,6 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
-            {/* Recent cards: stacked on mobile, 2-col on desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <Card>
                 <CardTitle>Recent Orders ({orders.length})</CardTitle>
@@ -574,7 +570,7 @@ export default function AdminDashboard() {
                     <table className="w-full border-collapse">
                       <thead>
                         <tr>
-                          {["Name", "Price", "Stock"].map((h) => (
+                          {["Image", "Name", "Price", "Stock"].map((h) => (
                             <th key={h} className={thCls}>
                               {h}
                             </th>
@@ -584,6 +580,20 @@ export default function AdminDashboard() {
                       <tbody>
                         {products.slice(0, 5).map((p) => (
                           <tr key={p.id} className="hover:bg-amber-50/60">
+                            <td className="px-3.5 py-3 border-b border-amber-700/5">
+                              {p.images?.[0] ? (
+                                <img
+                                  src={imgUrl(p.images[0], 80)}
+                                  alt={p.name}
+                                  className="w-10 h-10 object-cover rounded-lg border border-amber-700/10"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center text-lg border border-amber-100">
+                                  🛍️
+                                </div>
+                              )}
+                            </td>
                             <td className={tdCls}>{p.name}</td>
                             <td className={tdCls}>₹{p.price}</td>
                             <td className={tdCls}>
@@ -602,6 +612,121 @@ export default function AdminDashboard() {
               </Card>
             </div>
           </div>
+        );
+
+      case "products":
+        return (
+          <Card>
+            <div className="flex justify-between items-center mb-5">
+              <p className="font-['Cinzel',serif] text-base font-semibold text-amber-900">
+                All Products ({products.length})
+              </p>
+              <button
+                onClick={() => handleNav("upload")}
+                className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-4 sm:px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] transition-all shadow-[0_4px_14px_rgba(245,158,11,0.25)] inline-flex items-center gap-1.5"
+              >
+                ➕ Upload New
+              </button>
+            </div>
+            {products.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-5xl mb-3 opacity-20">🛍️</div>
+                <p className="font-['Cormorant_Garamond',serif] italic text-[15px] text-amber-700/35 mb-4">
+                  No products yet.
+                </p>
+                <button
+                  onClick={() => handleNav("upload")}
+                  className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold uppercase cursor-pointer hover:-translate-y-px transition-all"
+                >
+                  Upload First Product
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      {[
+                        "Image",
+                        "Name",
+                        "Brand",
+                        "Category",
+                        "Price",
+                        "Stock",
+                        "Features",
+                        "Actions",
+                      ].map((h) => (
+                        <th key={h} className={thCls}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p) => (
+                      <tr key={p.id} className="hover:bg-amber-50/60">
+                        <td className="px-3.5 py-3 border-b border-amber-700/5">
+                          {p.images?.[0] ? (
+                            <img
+                              src={imgUrl(p.images[0], 88)}
+                              alt={p.name}
+                              className="w-11 h-11 object-cover rounded-xl border border-amber-700/10"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center text-lg border border-amber-100">
+                              🛍️
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3.5 py-3 text-[13px] text-amber-900 font-medium border-b border-amber-700/5 max-w-32.5">
+                          <span className="block truncate">{p.name}</span>
+                        </td>
+                        <td className={tdCls}>{p.brand || "—"}</td>
+                        <td className="px-3.5 py-3 border-b border-amber-700/5">
+                          <span className="inline-flex px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-semibold">
+                            {p.category}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
+                          ₹{p.price}
+                        </td>
+                        <td className="px-3.5 py-3 border-b border-amber-700/5">
+                          <span
+                            className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${p.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}
+                          >
+                            {p.stock > 0 ? p.stock + " left" : "Out"}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-3 text-[11px] text-amber-700/50 border-b border-amber-700/5 max-w-30">
+                          <span className="block truncate">
+                            {(p.features || []).slice(0, 2).join(", ")}
+                            {(p.features || []).length > 2 ? "…" : ""}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-3 border-b border-amber-700/5">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => openEdit(p)}
+                              className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              onClick={() => deleteProduct(p.id)}
+                              className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                            >
+                              🗑 Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         );
 
       case "orders":
@@ -627,9 +752,6 @@ export default function AdminDashboard() {
                 <div className="text-6xl mb-4 opacity-20">📦</div>
                 <p className="font-['Cinzel',serif] text-base text-amber-700/40 mb-2">
                   No Orders Yet
-                </p>
-                <p className="font-['Cormorant_Garamond',serif] italic text-[15px] text-amber-700/30">
-                  Orders will appear here once customers start purchasing.
                 </p>
               </div>
             ) : (
@@ -713,10 +835,8 @@ export default function AdminDashboard() {
                 (c.id || "").toLowerCase().includes(q),
             )
           : customers;
-
         const admins = filtered.filter((c) => c.role === "admin");
         const nonAdmins = filtered.filter((c) => c.role !== "admin");
-
         return (
           <div className="space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -736,25 +856,11 @@ export default function AdminDashboard() {
                   {customers.filter((c) => c.role !== "admin").length} Customers
                 </span>
                 <div className="relative">
-                  <svg
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-700/40 pointer-events-none"
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="11" cy="11" r="7" />
-                    <line x1="16.5" y1="16.5" x2="22" y2="22" />
-                  </svg>
                   <input
                     type="text"
                     value={customerSearch}
                     onChange={(e) => setCustomerSearch(e.target.value)}
-                    placeholder="Search name, email, phone, ID…"
+                    placeholder="Search…"
                     className="pl-8 pr-3 py-2 text-[12px] bg-white border border-amber-700/20 rounded-xl text-amber-900 outline-none focus:border-amber-400 transition-all w-full sm:w-60 placeholder:text-amber-700/30"
                   />
                   {customerSearch && (
@@ -790,118 +896,101 @@ export default function AdminDashboard() {
         );
       }
 
-      case "products":
+      case "revenue":
         return (
-          <Card>
-            <div className="flex justify-between items-center mb-5">
-              <p className="font-['Cinzel',serif] text-base font-semibold text-amber-900">
-                All Products ({products.length})
-              </p>
-              <button
-                onClick={() => handleNav("upload")}
-                className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-4 sm:px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold tracking-widest uppercase cursor-pointer hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] transition-all shadow-[0_4px_14px_rgba(245,158,11,0.25)] inline-flex items-center gap-1.5"
-              >
-                ➕ Upload New
-              </button>
-            </div>
-            {products.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-5xl mb-3 opacity-20">🛍️</div>
-                <p className="font-['Cormorant_Garamond',serif] italic text-[15px] text-amber-700/35 mb-4">
-                  No products yet.
-                </p>
-                <button
-                  onClick={() => handleNav("upload")}
-                  className="bg-linear-to-br from-amber-400 to-amber-600 text-white border-none px-5 py-2 rounded-xl font-['Cinzel',serif] text-[10px] font-bold uppercase cursor-pointer hover:-translate-y-px transition-all"
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              {[
+                {
+                  label: "Total Revenue",
+                  value: `₹${totalRevenue}`,
+                  bg: "bg-green-50",
+                  border: "border-green-100",
+                  icon: "💰",
+                },
+                {
+                  label: "Completed Orders",
+                  value: completedOrders.length,
+                  bg: "bg-blue-50",
+                  border: "border-blue-100",
+                  icon: "✅",
+                },
+                {
+                  label: "Avg Order Value",
+                  value: completedOrders.length
+                    ? `₹${Math.round(totalRevenue / completedOrders.length)}`
+                    : "₹0",
+                  bg: "bg-amber-50",
+                  border: "border-amber-100",
+                  icon: "📈",
+                },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className={`${s.bg} ${s.border} border rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-sm`}
                 >
-                  Upload First Product
-                </button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      {[
-                        "Image",
-                        "Name",
-                        "Brand",
-                        "Category",
-                        "Price",
-                        "Stock",
-                        "Features",
-                        "Actions",
-                      ].map((h) => (
-                        <th key={h} className={thCls}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((p) => (
-                      <tr key={p.id} className="hover:bg-amber-50/60">
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          {p.images?.[0] ? (
-                            <img
-                              src={p.images[0]}
-                              alt={p.name}
-                              className="w-11 h-11 object-cover rounded-xl border border-amber-700/10"
-                            />
-                          ) : (
-                            <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center text-lg border border-amber-100">
-                              🛍️
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3.5 py-3 text-[13px] text-amber-900 font-medium border-b border-amber-700/5 max-w-32.5">
-                          <span className="block truncate">{p.name}</span>
-                        </td>
-                        <td className={tdCls}>{p.brand || "—"}</td>
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          <span className="inline-flex px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-semibold">
-                            {p.category}
-                          </span>
-                        </td>
-                        <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
-                          ₹{p.price}
-                        </td>
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          <span
-                            className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${p.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}
-                          >
-                            {p.stock > 0 ? p.stock + " left" : "Out"}
-                          </span>
-                        </td>
-                        <td className="px-3.5 py-3 text-[11px] text-amber-700/50 border-b border-amber-700/5 max-w-30">
-                          <span className="block truncate">
-                            {(p.features || []).slice(0, 2).join(", ")}
-                            {(p.features || []).length > 2 ? "…" : ""}
-                          </span>
-                        </td>
-                        <td className="px-3.5 py-3 border-b border-amber-700/5">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openEdit(p)}
-                              className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              onClick={() => deleteProduct(p.id)}
-                              className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border cursor-pointer transition-all bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                            >
-                              🗑 Delete
-                            </button>
-                          </div>
-                        </td>
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+                  <span className="absolute top-3 right-3 sm:top-4 sm:right-4 text-xl sm:text-2xl opacity-20">
+                    {s.icon}
+                  </span>
+                  <div className="font-['Cinzel',serif] text-2xl sm:text-3xl font-bold text-amber-800 leading-none mb-1">
+                    {s.value}
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Card>
+              <CardTitle>Completed Orders</CardTitle>
+              {completedOrders.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-4 opacity-20">💰</div>
+                  <p className="font-['Cinzel',serif] text-base text-amber-700/40">
+                    No Revenue Yet
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        {["Order ID", "Customer", "Items", "Total", "Date"].map(
+                          (h) => (
+                            <th key={h} className={thCls}>
+                              {h}
+                            </th>
+                          ),
+                        )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
+                    </thead>
+                    <tbody>
+                      {completedOrders.map((o) => (
+                        <tr key={o.id} className="hover:bg-amber-50/60">
+                          <td className="px-3.5 py-3 text-[12px] text-amber-700 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
+                            {o.orderId || o.id}
+                          </td>
+                          <td className={tdCls}>
+                            {o.customerName || o.email || "—"}
+                          </td>
+                          <td className={tdCls}>{(o.items || []).length}</td>
+                          <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
+                            ₹{o.total || o.grandTotal || 0}
+                          </td>
+                          <td className="px-3.5 py-3 text-[12px] text-amber-700/50 border-b border-amber-700/5">
+                            {o.createdAt
+                              ?.toDate?.()
+                              ?.toLocaleDateString?.("en-IN") || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </div>
         );
 
       case "upload":
@@ -991,7 +1080,6 @@ export default function AdminDashboard() {
                 </div>
               )}
             </Card>
-
             <Card>
               <p className="font-['Cinzel',serif] text-[15px] font-semibold text-amber-900 mb-5">
                 Basic Information
@@ -1058,7 +1146,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Card>
-
             <Card>
               <p className="font-['Cinzel',serif] text-[15px] font-semibold text-amber-900 mb-5">
                 Pricing &amp; Stock
@@ -1127,7 +1214,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Card>
-
             <Card>
               <p className="font-['Cinzel',serif] text-[15px] font-semibold text-amber-900 mb-1">
                 Product Features
@@ -1150,7 +1236,6 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </Card>
-
             <div className="flex gap-3 items-center">
               <button
                 type="submit"
@@ -1180,106 +1265,6 @@ export default function AdminDashboard() {
           </form>
         );
 
-      case "revenue":
-        return (
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {[
-                {
-                  label: "Total Revenue",
-                  value: `₹${totalRevenue}`,
-                  bg: "bg-green-50",
-                  border: "border-green-100",
-                  icon: "💰",
-                },
-                {
-                  label: "Completed Orders",
-                  value: completedOrders.length,
-                  bg: "bg-blue-50",
-                  border: "border-blue-100",
-                  icon: "✅",
-                },
-                {
-                  label: "Avg Order Value",
-                  value: completedOrders.length
-                    ? `₹${Math.round(totalRevenue / completedOrders.length)}`
-                    : "₹0",
-                  bg: "bg-amber-50",
-                  border: "border-amber-100",
-                  icon: "📈",
-                },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className={`${s.bg} ${s.border} border rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-sm`}
-                >
-                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
-                  <span className="absolute top-3 right-3 sm:top-4 sm:right-4 text-xl sm:text-2xl opacity-20">
-                    {s.icon}
-                  </span>
-                  <div className="font-['Cinzel',serif] text-2xl sm:text-3xl font-bold text-amber-800 leading-none mb-1">
-                    {s.value}
-                  </div>
-                  <div className="text-[10px] sm:text-[11px] text-amber-700/50 tracking-widest uppercase font-medium">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Card>
-              <CardTitle>Completed Orders</CardTitle>
-              {completedOrders.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="text-5xl mb-4 opacity-20">💰</div>
-                  <p className="font-['Cinzel',serif] text-base text-amber-700/40 mb-1">
-                    No Revenue Yet
-                  </p>
-                  <p className="font-['Cormorant_Garamond',serif] italic text-[15px] text-amber-700/30">
-                    Revenue tracking begins with your first delivered order.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        {["Order ID", "Customer", "Items", "Total", "Date"].map(
-                          (h) => (
-                            <th key={h} className={thCls}>
-                              {h}
-                            </th>
-                          ),
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {completedOrders.map((o) => (
-                        <tr key={o.id} className="hover:bg-amber-50/60">
-                          <td className="px-3.5 py-3 text-[12px] text-amber-700 border-b border-amber-700/5 font-['Cinzel',serif] font-semibold">
-                            {o.orderId || o.id}
-                          </td>
-                          <td className={tdCls}>
-                            {o.customerName || o.email || "—"}
-                          </td>
-                          <td className={tdCls}>{(o.items || []).length}</td>
-                          <td className="px-3.5 py-3 text-amber-700 font-semibold border-b border-amber-700/5">
-                            ₹{o.total || o.grandTotal || 0}
-                          </td>
-                          <td className="px-3.5 py-3 text-[12px] text-amber-700/50 border-b border-amber-700/5">
-                            {o.createdAt
-                              ?.toDate?.()
-                              ?.toLocaleDateString?.("en-IN") || "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          </div>
-        );
-
       default:
         return (
           <Card className="text-center py-20">
@@ -1299,9 +1284,8 @@ export default function AdminDashboard() {
           onClick={() => setSidebar(false)}
         />
       )}
-
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-60 bg-white border-r border-amber-700/10 flex flex-col py-7 shrink-0 overflow-y-auto shadow-sm z-50 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        className={`fixed lg:sticky top-0 left-0 h-screen w-60 bg-white border-r border-amber-700/10 flex flex-col py-7 shrink-0 overflow-y-auto shadow-sm z-100 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <div className="px-6 pb-7 border-b border-amber-700/8">
           <div className="text-[28px] mb-1.5">ॐ</div>
@@ -1372,7 +1356,6 @@ export default function AdminDashboard() {
           </span>
           <div className="w-9" />
         </div>
-
         <main className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-10 py-5 sm:py-6 lg:py-9">
           <div className="mb-5 sm:mb-8">
             <h1 className="font-['Cinzel',serif] text-[18px] sm:text-[22px] font-bold text-amber-900 m-0 mb-1">
