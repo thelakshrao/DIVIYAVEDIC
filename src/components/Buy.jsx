@@ -274,21 +274,21 @@ function OrderModal({ product, qty, onClose }) {
       const CHAT_ID = "6261841518";
 
       const telegramMsg = `
-<b>🚀 NEW ORDER: ${newOrderId}</b>
----------------------------
-<b>📦 Product:</b> ${product.name}
-<b>🔢 Qty:</b> ${qty}
-<b>💰 Total:</b> ₹${grandTotal}
-<b>💳 Payment:</b> ${payMode.toUpperCase()}
+      <b>🚀 NEW ORDER: ${newOrderId}</b>
+      ---------------------------
+      <b>📦 Product:</b> ${product.name}
+      <b>🔢 Qty:</b> ${qty}
+      <b>💰 Total:</b> ₹${grandTotal}
+      <b>💳 Payment:</b> ${payMode.toUpperCase()}
 
-<b>👤 Customer:</b> ${orderData.customerName}
-<b>📞 Phone:</b> ${addr.phone}
-<b>📧 Email:</b> ${orderData.email}
+      <b>👤 Customer:</b> ${orderData.customerName}
+      <b>📞 Phone:</b> ${addr.phone}
+      <b>📧 Email:</b> ${orderData.email}
 
-<b>📍 Address:</b>
-${addr.line1}${addr.line2 ? ", " + addr.line2 : ""},
-${addr.city}, ${addr.state} - ${addr.pincode}
----------------------------
+      <b>📍 Address:</b>
+      ${addr.line1}${addr.line2 ? ", " + addr.line2 : ""},
+      ${addr.city}, ${addr.state} - ${addr.pincode}
+      ---------------------------
       `;
 
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
